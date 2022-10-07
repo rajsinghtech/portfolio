@@ -1,6 +1,6 @@
 const header = {
   // all the properties are optional - can be left empty or deleted
-  homepage: 'https://rajsinghtech.github.io/personal-site/',
+  homepage: 'https://rajsinghtech.github.io/portfolio/',
   title: 'Raj Singh.',
 }
 
@@ -10,7 +10,7 @@ const about = {
   role: 'Network Engineer',
   description:
     'Looking for a challenging position in an IT Company where I can use my capabilities and learn everything which contributes to the growth of the organization. I have a passion for networking infrastructure, IT, and integrated systems.',
-  resume: 'https://rajsinghtech.github.io/personal-site/',
+  resume: 'https://rajsinghtech.github.io/portfolio/',
   social: {
     linkedin: 'https://www.linkedin.com/in/rajsingh360/',
     github: 'https://github.com/rajsinghtech',
