@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "/portfolio/static/css/main.fdff8c23.chunk.css",
+    "main.js": "/portfolio/static/js/main.4a724eb0.chunk.js",
+    "main.js.map": "/portfolio/static/js/main.4a724eb0.chunk.js.map",
+    "runtime-main.js": "/portfolio/static/js/runtime-main.99fa3c69.js",
+    "runtime-main.js.map": "/portfolio/static/js/runtime-main.99fa3c69.js.map",
+    "static/js/2.f5288c40.chunk.js": "/portfolio/static/js/2.f5288c40.chunk.js",
+    "static/js/2.f5288c40.chunk.js.map": "/portfolio/static/js/2.f5288c40.chunk.js.map",
+    "index.html": "/portfolio/index.html",
+    "static/css/main.fdff8c23.chunk.css.map": "/portfolio/static/css/main.fdff8c23.chunk.css.map",
+    "static/js/2.f5288c40.chunk.js.LICENSE.txt": "/portfolio/static/js/2.f5288c40.chunk.js.LICENSE.txt",
+    "static/media/CumulativeReflection.b0d95a44.pdf": "/portfolio/static/media/CumulativeReflection.b0d95a44.pdf",
+    "static/media/EthicsEssay.1d0c8816.pdf": "/portfolio/static/media/EthicsEssay.1d0c8816.pdf",
+    "static/media/GeneralEdReflection.514f57e0.pdf": "/portfolio/static/media/GeneralEdReflection.514f57e0.pdf",
+    "static/media/RajSinghResume.198720f7.pdf": "/portfolio/static/media/RajSinghResume.198720f7.pdf"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.99fa3c69.js",
+    "static/js/2.f5288c40.chunk.js",
+    "static/css/main.fdff8c23.chunk.css",
+    "static/js/main.4a724eb0.chunk.js"
+  ]
+}
