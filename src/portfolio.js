@@ -9,7 +9,7 @@ const about = {
   name: 'Raj Singh',
   role: 'Network Engineer',
   description:
-    'Looking for a challenging position in an IT Company where I can use my capabilities and learn everything which contributes to the growth of the organization. I have a passion for networking infrastructure, IT, and integrated systems.',
+    'Looking for a challenging position in an IT Company that will utilize my expertise to contribute to the growth of the organization. I have a passion for networking infrastructure, IT, and integrated systems.',
   resume: 'https://rajsinghtech.github.io/',
   social: {
     linkedin: 'https://www.linkedin.com/in/rajsingh360/',
