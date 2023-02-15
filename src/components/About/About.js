@@ -4,9 +4,6 @@ import LinkedInIcon from '@material-ui/icons/LinkedIn'
 import { about } from '../../portfolio'
 import './About.css'
 import resumepdf from './RajSinghResume.pdf';
-import genedpdf from './GeneralEdReflection.pdf';
-import cummulativepdf from './CumulativeReflection.pdf';
-import ethicspdf from './EthicsEssay.pdf';
 
 
 
@@ -29,27 +26,6 @@ const About = () => {
           <a href={resumepdf}>
             <span type='button' className='btn btn--outline'>
               Resume
-            </span>
-          </a>
-        )}
-        {genedpdf && (
-          <a href={genedpdf}>
-            <span type='button' className='btn btn--outline'>
-            Gen Ed Reflection
-            </span>
-          </a>
-        )}
-        {cummulativepdf && (
-          <a href={cummulativepdf}>
-            <span type='button' className='btn btn--outline'>
-            Cumulative Reflection
-            </span>
-          </a>
-        )}
-        {ethicspdf && (
-          <a href={ethicspdf}>
-            <span type='button' className='btn btn--outline'>
-            Ethics Essay
             </span>
           </a>
         )}
