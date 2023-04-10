@@ -7,9 +7,9 @@ const header = {
 const about = {
   // all the properties are optional - can be left empty or deleted
   name: 'Raj Singh',
-  role: 'Network Engineer',
+  role: 'Site Reliability Engineer',
   description:
-    'Looking for a challenging position in an IT Company that will utilize my expertise to contribute to the growth of the organization. I have a passion for networking infrastructure, IT, and integrated systems.',
+    'Looking for a challenging position in an IT Company that will utilize my expertise to contribute to the growth of the organization. I have a passion for networking infrastructure, platform engineering, and integrated systems.',
   resume: 'https://rajsinghtech.github.io/',
   social: {
     linkedin: 'https://www.linkedin.com/in/rajsingh360/',
