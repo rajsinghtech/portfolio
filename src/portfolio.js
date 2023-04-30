@@ -21,6 +21,22 @@ const projects = [
   // projects can be added an removed
   // if there are no projects, Projects section won't show up
   {
+    name: 'Okta Sidecar',
+    description:
+      'Created a sidecar container to allow for the use of Okta SSO with any application in a containerized environment. This was done by using the Okta API to generate a JWT token and then using that token to authenticate with the application.',
+    stack: ['Nginx', 'Docker', 'Kubernetes', 'Oauth', 'Okta'],
+    sourceCode: 'https://github.com/rajsinghtech/Okta-Sidecar',
+    livePreview: 'https://github.com/rajsinghtech/Okta-Sidecar',
+  },
+  {
+    name: 'Twitter Bot ETF Tracker',
+    description:
+      'Created a twitter bot to track the performance of ETFs. This was done by scrapping the various position sizings of an ETF and then using that to calculate the day to day change of the ETF.',
+    stack: ['Python', 'SQL'],
+    sourceCode: 'https://github.com/rajsinghtech/pptracker',
+    livePreview: 'https://twitter.com/LongPPBot',
+  },
+  {
     name: 'MIPS Pipelined Pipelined Processor',
     description:
       'Made designs for single-cycle, pipelined processors. Created using both VHDL and Verilog. Verified with python scripting. Optimized and Generated Layout',
@@ -45,7 +61,7 @@ const projects = [
     livePreview: 'https://github.com/rajsinghtech/UDP-stream-introduce-error',
   },
   {
-    name: 'Better Bots Senior Design (In Progress)',
+    name: 'Better Bots Senior Design',
     description:
       'Working on a integrating an FPGA to allow for other programmers to interface with sensors, cameras, and Audio to Digital converters over USB. My role in this is to work on the acutal design specifications as well as flash/program the interface between the diffrent peripherals.',
     stack: ['Linux', 'C', 'Python', 'LiteX', 'Assembly'],
@@ -69,6 +85,15 @@ const skills = [
   'CI/CD',
   'Python',
   'C',
+  'Infrastructure automation',
+  'Cloud computing',
+  'Containerization',
+  'Networking',
+  'Computer Organization',
+  'Digital Logic',
+  'Circuit Design',
+  'IT Operations',
+  'Vulnerability Assessment'
 ]
 
 const contact = {
