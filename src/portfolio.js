@@ -31,7 +31,7 @@ const projects = [
   {
     name: 'Twitter Bot ETF Tracker',
     description:
-      'Created a twitter bot to track the performance of ETFs. This was done by scrapping the various position sizings of an ETF and then using that to calculate the day to day change of the ETF.',
+      'Created a twitter bot to track the performance of ETFs. This was done by scraping the various position sizings of an ETF and then using that to calculate the day to day change of the ETF.',
     stack: ['Python', 'SQL'],
     sourceCode: 'https://github.com/rajsinghtech/pptracker',
     livePreview: 'https://twitter.com/LongPPBot',
