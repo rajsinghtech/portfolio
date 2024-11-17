@@ -155,8 +155,8 @@
 
 
   &lt;div class=&#34;collapsable-code&#34;&gt;
-    &lt;input id=&#34;835927416&#34; type=&#34;checkbox&#34;  /&gt;
-    &lt;label for=&#34;835927416&#34;&gt;
+    &lt;input id=&#34;138574269&#34; type=&#34;checkbox&#34;  /&gt;
+    &lt;label for=&#34;138574269&#34;&gt;
       &lt;span class=&#34;collapsable-code__language&#34;&gt;css&lt;/span&gt;
       &lt;span class=&#34;collapsable-code__title&#34;&gt;Hey, this is a code block title&lt;/span&gt;
       &lt;span class=&#34;collapsable-code__toggle&#34; data-label-expand=&#34;△&#34; data-label-collapse=&#34;▽&#34;&gt;&lt;/span&gt;
