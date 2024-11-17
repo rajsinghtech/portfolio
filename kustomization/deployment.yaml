@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portfolio-raj
+  labels:
+    app: portfolio-raj
+  namespace: rajsinghtech
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portfolio-raj
+  template:
+    metadata:
+      labels:
+        app: portfolio-raj
+    spec:
+      containers:
+      - name: server
+        image: hugomods/hugo:exts-non-root
+        command: ["server", "-t", "terminal"]
+        # volumeMounts:
+        # - name: src-volume
+        #   mountPath: /src
+        # - name: hugo-cache
+        #   mountPath: /tmp/hugo_cache
+        lifecycle:
+          postStart:
+            exec:
+              command: ["/bin/sh", "-c", "cd /src && git clone --branch hugo https://github.com/rajsinghtech/portfolio-raj"]
+        ports:
+        - containerPort: 1313
+      # volumes:
+      # - name: src-volume
+      #   hostPath:
+      #     path: /path/to/local/source  # Replace with the local source directory
+      # - name: hugo-cache
+      #   hostPath:
+      #     path: /path/to/local/hugo_cache  # Replace with the local cache directory
+--- 
