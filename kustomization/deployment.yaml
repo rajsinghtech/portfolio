@@ -15,26 +15,28 @@ spec:
       labels:
         app: portfolio-raj
     spec:
+      volumes:
+      - name: src-volume
+        emptyDir: {}
+      initContainers:
+      - name: clone-repo
+        image: alpine/git
+        command:
+        - sh
+        - -c
+        - |
+          git clone --branch hugo https://github.com/rajsinghtech/portfolio-raj /src
+        volumeMounts:
+        - name: src-volume
+          mountPath: /src
       containers:
       - name: server
         image: hugomods/hugo:exts-non-root
         command: ["server", "-t", "terminal"]
-        # volumeMounts:
-        # - name: src-volume
-        #   mountPath: /src
-        # - name: hugo-cache
-        #   mountPath: /tmp/hugo_cache
-        lifecycle:
-          postStart:
-            exec:
-              command: ["/bin/sh", "-c", "cd /src && git clone --branch hugo https://github.com/rajsinghtech/portfolio-raj"]
         ports:
         - containerPort: 1313
-      # volumes:
-      # - name: src-volume
-      #   hostPath:
-      #     path: /path/to/local/source  # Replace with the local source directory
-      # - name: hugo-cache
-      #   hostPath:
-      #     path: /path/to/local/hugo_cache  # Replace with the local cache directory
---- 
+        volumeMounts:
+        - name: src-volume
+          mountPath: /src
+        - name: hugo-cache
+          mountPath: /tmp/hugo_cache
