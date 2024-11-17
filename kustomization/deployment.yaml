@@ -26,6 +26,7 @@ spec:
         - -c
         - |
           git clone --branch hugo https://github.com/rajsinghtech/portfolio.git /src
+          chown -R 1000:1000 /src
         volumeMounts:
         - name: src-volume
           mountPath: /src
@@ -40,3 +41,6 @@ spec:
           mountPath: /src
         # - name: hugo-cache
         #   mountPath: /tmp/hugo_cache
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
