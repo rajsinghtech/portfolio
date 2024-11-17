@@ -1,3 +1,3 @@
-module github.com/panr/hugo-theme-terminal/v4
+module github.com/adityatelange/hugo-PaperMod
 
-go 1.19
+go 1.12

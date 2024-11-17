@@ -1,4 +1,4 @@
 local:
-	docker compose
+	docker compose up
 init:
-	git clone https://github.com/panr/hugo-theme-terminal.git themes/terminal
+	git clone https://github.com/adityatelange/hugo-PaperMod.git themes/hugo-PaperMod
