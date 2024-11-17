@@ -25,7 +25,7 @@ spec:
         - sh
         - -c
         - |
-          git clone --branch hugo https://github.com/rajsinghtech/portfolio-raj /src
+          git clone --branch hugo https://github.com/rajsinghtech/portfolio.git /src
         volumeMounts:
         - name: src-volume
           mountPath: /src
