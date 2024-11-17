@@ -18,23 +18,23 @@ spec:
       volumes:
       - name: src-volume
         emptyDir: {}
-      # initContainers:
-      # - name: clone-repo
-      #   image: alpine/git
-      #   command:
-      #   - sh
-      #   - -c
-      #   - |
-      #     git clone --branch hugo https://github.com/rajsinghtech/portfolio.git /src
-      #     chown -R 1000:1000 /src
-      #   volumeMounts:
-      #   - name: src-volume
-      #     mountPath: /src
+      initContainers:
+      - name: clone-repo
+        image: alpine/git
+        command:
+        - sh
+        - -c
+        - |
+          git clone --branch hugo https://github.com/rajsinghtech/portfolio.git /src
+          chown -R 1000:1000 /src
+        volumeMounts:
+        - name: src-volume
+          mountPath: /src
       containers:
       - name: server
         image: hugomods/hugo:exts-non-root
-        # command: ["server", "-t", "terminal"]
-        command: ["sleep", "infinity"]
+        command: ["server", "-t", "portfolio"]
+        # command: ["sleep", "infinity"]
         ports:
         - containerPort: 1313
         volumeMounts:
