@@ -30,3 +30,11 @@ url = "https://www.linkedin.com/in/rajsingh360/"
 
 [social.params]
 icon = "brand-linkedin"
+
+[[social]]
+identifier = "Resume"
+name = "Resume"
+url = "/resume.pdf"
+
+[[social.params]]
+icon = "resume"
