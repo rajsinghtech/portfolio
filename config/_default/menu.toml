@@ -22,3 +22,11 @@ url = "https://twitter.com/rajsinghtech"
 
 [social.params]
 icon = "brand-twitter"
+
+[[social]]
+identifier = "linkedin"
+name = "linkedin"
+url = "https://www.linkedin.com/in/rajsingh360/"
+
+[social.params]
+icon = "brand-linkedin"
