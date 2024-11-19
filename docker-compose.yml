@@ -3,7 +3,7 @@ name: portfolio
 services:
   server:
     image: hugomods/hugo:exts-non-root
-    command: server -t portfolio --navigateToChanged
+    command: server --navigateToChanged
     volumes:
       - ./:/src
       - ~/hugo_cache:/tmp/hugo_cache
