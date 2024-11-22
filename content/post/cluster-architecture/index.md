@@ -1,5 +1,5 @@
 ---
-title: My Ultimate On-Prem Cluster Framework
+title: My Stacked On-Prem Cluster Framework
 description: Opinionated culmination of my extensive research into the art of Cluster Operation
 slug: cluster-framework
 date: 2024-11-21 00:00:00+0000
@@ -20,7 +20,7 @@ Some of the services I run in my cluster include:
 - Redis
 - Postgres
 - s3-compatible object storage
-- Tesla Telemetry Injestion (streaming data from my Tesla Model y)
+- Tesla Telemetry Injestion (streaming data from my Tesla Model Y)
 - Home Assistant (automation and monitoring of my home)
 - Media Server (Plex, Sonarr, Radarr, etc.)
 - [Typeo](https://typeo.io) (Typing practice)
@@ -77,7 +77,7 @@ After testing solutions like Longhorn, Rook/Ceph is by far the best storage solu
 Tailscale is a cutting-edge WireGuard VPN. It is a modern alternative to ZeroTier and offers full compatibility with WireGuard, along with additional features that enhance usability. For example, it includes a built-in DNS proxy and a method to manage WireGuard keys. I run this on all my nodes, allowing me to securely connect to the cluster from anywhere for both ingress and egress traffic. Using Subnet Routing, I can route to pods, services, and local LAN traffic.
 ![](tailscale.png)  
 #### Tailscale Operator
-The Tailscale operator is a tool that allows you to manage Tailscale nodes as Kubernetes resources. It provides a way to deploy and manage Tailscale nodes in a Kubernetes cluster, making it easier to integrate Tailscale with other Kubernetes resources and services.
+The [Tailscale operator](https://tailscale.com/kb/1236/kubernetes-operator) provides a way to deploy and manage Tailscale nodes in a Kubernetes cluster, making it easier to integrate Tailscale with other Kubernetes resources and services.
 ``` yaml
 apiVersion: tailscale.com/v1alpha1
 kind: Connector
@@ -125,7 +125,7 @@ The Prometheus stack is a collection of tools for monitoring and observability. 
 ![Grafana Ceph Dashboard](grafana.png)
 
 ### Secrets Management - 1Password
-1Password is a password manager that I can use to store all my passwords and secrets. It is a secure and easy-to-use tool that I can use to manage my secrets.
+1Password is a password manager that I can use to store all my passwords and secrets. I can define a secret in 1Password, and then reference it in a Kubernetes manifest.
 ```yaml
 apiVersion: onepassword.com/v1
 kind: OnePasswordItem
