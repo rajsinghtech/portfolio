@@ -1,6 +1,6 @@
 ---
-title: My Stacked On-Prem Cluster Framework
-description: Opinionated culmination of my extensive research into the art of Cluster Operation
+title: My Homelab On-Prem Cluster Framework
+description: Opinionated culmination of my extensive research into the art of Homelab Cluster Operation
 slug: cluster-framework
 date: 2024-11-21 00:00:00+0000
 image: cover.png
@@ -11,7 +11,7 @@ tags:
 weight: 1  
 ---
 
-Kubernetes is an amazing tool for standing up production-ready infrastructure both on-premises and in the cloud. Throughout my journey as a Cluster Operator, I have learned many useful practices for managing the world of Kubernetes.
+Kubernetes is an amazing tool for standing up production-ready infrastructure both on-premises and in the cloud. Throughout my journey as a Homelab Cluster Operator, I have learned many useful practices for managing the world of Kubernetes.
 
 I have always strived to build infrastructure that is secure, resilient, reliable, extensible, and observable. I believe I am at a place where I can lay out a generic framework for managing clusters. This is something I run at home and have had great success with.
 
