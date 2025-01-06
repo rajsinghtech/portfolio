@@ -1,7 +1,7 @@
 ---
 title: Tailscale Operator Deep Dive
 description: Learning about the Tailscale Kubernetes Operator, and how it can be used to manage Tailscale in a Kubernetes cluster.
-slug: cluster-framework
+slug: tailscale-operator
 date: 2025-01-11 00:00:00+0000
 image: tailscale.png
 categories:
