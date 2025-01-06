@@ -239,3 +239,14 @@ metadata:
 In Tailscale, we can see the UDP flows to the world as well as the connections to the Tailscale Coordination servers over HTTPS.
 
 ![Hubble](hubble.png)
+
+## NAT Type
+
+From the ping command, we can see that the NAT type of my Connector pod withink the cluster is likely EasyNAT mode. We can tell this because UDP is yes. In addition, when pinging the connector from outside the cluster we never reach a DERP server. This means I am in direct connection mode.
+
+![Nat Type](nat.png)
+
+``` bash
+rajs@macbook % tailscale ping robbinsdale-connector
+pong from robbinsdale-connector (100.107.45.57) via 67.4.239.75:56786 in 33ms
+```
