@@ -13,7 +13,9 @@ tags:
 weight: 1  
 ---
 
-In this post, I will be discussing the **Tailscale Kubernetes Operator**, and how it can be used to manage Tailscale in a Kubernetes cluster.
+In this post, I will be discussing the **Tailscale Kubernetes Operator**, and how it can be used to manage Tailscale in a Kubernetes cluster. 
+
+Live Kubernetes manifests can be found [here](https://github.com/rajsinghtech/kubernetes-manifests/tree/main/clusters/talos-robbinsdale/apps/tailscale).
 
 ## API Server Proxy
 
