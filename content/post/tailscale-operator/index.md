@@ -2,14 +2,14 @@
 title: Tailscale Operator Deep Dive
 description: Learning about the Tailscale Kubernetes Operator, and how it can be used to manage Tailscale in a Kubernetes cluster.
 slug: tailscale-operator
-date: 2025-01-11 00:00:00+0000
+date: 2025-01-06 00:00:00+0000
 image: tailscale.png
 categories:
-  - Kubernetes
-  - Tailscale
+    - Kubernetes
+    - Tailscale
 tags:
-  - kubernetes
-  - tailscale
+    - kubernetes
+    - tailscale
 weight: 1  
 ---
 
@@ -174,7 +174,7 @@ The result is a device in my tailnet that exposes these subnets.
 Now, I can reach any resource within my local network and Kubernetes cluster from anywhere in my tailnet!
 
 ```bash 
-root@code-server-5fb56db484-f7wg5:/# ping 192.168.50.1 -c 2
+rajs@macbook:/# ping 192.168.50.1 -c 2
 PING 192.168.50.1 (192.168.50.1) 56(84) bytes of data.
 64 bytes from 192.168.50.1: icmp_seq=1 ttl=64 time=0.022 ms
 64 bytes from 192.168.50.1: icmp_seq=2 ttl=64 time=0.022 ms
@@ -236,6 +236,6 @@ metadata:
 
 ### Hubble Flows
 
-In Tailscale, we can see the UDP flows to the world as well as the connections to the Tailscale DERP servers over HTTPS.
+In Tailscale, we can see the UDP flows to the world as well as the connections to the Tailscale Coordination servers over HTTPS.
 
 ![Hubble](hubble.png)
