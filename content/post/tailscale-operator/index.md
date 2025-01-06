@@ -240,9 +240,9 @@ In Tailscale, we can see the UDP flows to the world as well as the connections t
 
 ![Hubble](hubble.png)
 
-## NAT Type
+### NAT Type
 
-From the ping command, we can see that the NAT type of my Connector pod withink the cluster is likely EasyNAT mode. We can tell this because UDP is yes. In addition, when pinging the connector from outside the cluster we never reach a DERP server. This means I am in direct connection mode.
+From the ping command, we can see that the NAT type of my Connector pod withink the cluster is likely EasyNAT mode. We can tell this because UDP is yes. In addition, when pinging the connector from outside the cluster we never reach a DERP server. This means I am in direct connection mode and likely not in HardNAT mode.
 
 ![Nat Type](nat.png)
 
