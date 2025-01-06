@@ -25,8 +25,6 @@ The Tailscale Kubernetes Operator includes an **API Server Proxy** that enables 
 
 In my case, I have the API Server Proxy enabled and configured to use the `auth` mode. This allows me to configure granular Kubernetes RBAC permissions for individual tailnet users or groups.
 
-### Configuring RBAC
-
 1. **Add the following to your Tailscale ACL:**
 
    ```json
