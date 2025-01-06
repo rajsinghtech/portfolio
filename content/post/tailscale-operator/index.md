@@ -93,7 +93,6 @@ Now, you can use the `kubectl` command to interact with your Kubernetes cluster 
 
 ![Operator Running](k9s.png)
 
-## Egress
 
 ## Egress
 
