@@ -25,7 +25,7 @@ Before diving into the operator specifics, it's helpful to understand how Tailsc
 
 ## Installation
 
-Before we can use any of the Tailscale features, we need to install the operator. There are two main components to set up:
+Before we can use any of the Tailscale features, we need to install the operator.
 
 Please follow the [Tailscale Kubernetes Operator Installation Guide](https://tailscale.com/kb/1236/kubernetes-operator) for more details.
 
