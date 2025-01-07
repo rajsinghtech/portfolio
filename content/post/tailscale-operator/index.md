@@ -1,6 +1,6 @@
 ---
 title: Tailscale Operator Deep Dive
-description: Learning about the Tailscale Kubernetes Operator, and how it can be used to manage Tailscale in a Kubernetes cluster.
+description: A comprehensive guide to using the Tailscale Kubernetes Operator for secure networking in Kubernetes clusters
 slug: tailscale-operator
 date: 2025-01-06 00:00:00+0000
 image: tailscale.png
@@ -10,22 +10,28 @@ categories:
 tags:
     - kubernetes
     - tailscale
-weight: 1  
+    - networking
+    - security
+weight: 1
 ---
 
-In this post, I will be discussing the **Tailscale Kubernetes Operator**, and how it can be used to manage Tailscale in a Kubernetes cluster. 
+The **Tailscale Kubernetes Operator** enables seamless integration between Kubernetes clusters and Tailscale's secure networking capabilities. In this deep dive, I'll explore how to use the operator to manage Tailscale connectivity in a Kubernetes environment.
 
-Live Kubernetes manifests can be found [here](https://github.com/rajsinghtech/kubernetes-manifests/tree/main/clusters/talos-robbinsdale/apps/tailscale).
+Live Kubernetes manifests for this setup can be found in my [GitHub repository](https://github.com/rajsinghtech/kubernetes-manifests/tree/main/clusters/talos-robbinsdale/apps/tailscale).
+
+## How Tailscale Works
+
+Before diving into the operator specifics, it's helpful to understand how Tailscale works. Tailscale creates a secure mesh network using WireGuard for encrypted tunnels between nodes. Instead of traditional hub-and-spoke VPN architecture, Tailscale enables direct peer-to-peer connections between nodes where possible, falling back to DERP (Designated Encrypted Relay for Packets) servers when direct connections aren't possible.
 
 ## API Server Proxy
 
-The Tailscale Kubernetes Operator includes an **API Server Proxy** that enables you to expose and access the Kubernetes control plane (`kube-apiserver`) over Tailscale. This is a great feature that negates the need for external management tools like Rancher.
+One of the most powerful features of the Tailscale Kubernetes Operator is the **API Server Proxy**. This allows you to securely expose your Kubernetes control plane (`kube-apiserver`) over Tailscale, eliminating the need for external management tools like Rancher.
 
-[Learn more](https://tailscale.com/kb/1437/kubernetes-operator-api-server-proxy).
+### Setting up API Server Access
 
-In my case, I have the API Server Proxy enabled and configured to use the `auth` mode. This allows me to configure granular Kubernetes RBAC permissions for individual tailnet users or groups.
+1. **Configure Tailscale ACLs**
 
-1. **Add the following to your Tailscale ACL:**
+   First, we need to set up appropriate access controls in the Tailscale ACLs:
 
    ```json
    {
@@ -60,9 +66,14 @@ In my case, I have the API Server Proxy enabled and configured to use the `auth`
    }
    ```
 
-   This configuration grants users in the `autogroup:admin` group access to impersonate the `system:masters` group in Kubernetes, giving them full administrative privileges. Regular members in `autogroup:member` are granted access to the `tailnet-readers` group, allowing them read-only access as defined by Kubernetes RBAC.
+   This configuration:
+   - Grants admin users (`autogroup:admin`) full cluster access via the `system:masters` group
+   - Gives regular users (`autogroup:member`) read-only access through the `tailnet-readers` group
+   - Uses Tailscale's built-in group impersonation for RBAC integration
 
-2. **Create a `ClusterRoleBinding` for the `tailnet-readers` group:**
+2. **Set up RBAC for Read-only Access**
+
+   Create a `ClusterRoleBinding` for the read-only group:
 
    ```yaml
    apiVersion: rbac.authorization.k8s.io/v1
@@ -79,24 +90,23 @@ In my case, I have the API Server Proxy enabled and configured to use the `auth`
        apiGroup: rbac.authorization.k8s.io
    ```
 
-3. **Configure your kubeconfig to use the Tailscale API Server Proxy:**
+3. **Configure kubectl**
+
+   Set up your local kubectl configuration:
 
    ```bash
    tailscale configure kubeconfig tailscale-operator.your-tailnet.ts.net
    ```
 
-   Replace `tailscale-operator.your-tailnet.ts.net` with the MagicDNS name of your Tailscale operator node.
+Once configured, you can securely access your cluster from anywhere in your tailnet:
 
-Now, you can use the `kubectl` command to interact with your Kubernetes cluster over Tailscale!
+![Operator Running in K9s](k9s.png)
 
-![Operator Running](k9s.png)
+## Egress Configuration
 
+The operator enables pods within your cluster to access resources in your tailnet through Tailscale's secure mesh network.
 
-## Egress
-
-The Tailscale Kubernetes Operator supports **Egress**, which allows you to route traffic from your cluster to other destinations in your tailnet.
-
-In this example, I have created a `Service` that routes traffic to the `robbinsdale.your-tailnet.ts.net` Tailscale MagicDNS name.
+Here's an example of exposing a Tailscale node to your cluster:
 
 ```yaml
 apiVersion: v1
@@ -107,45 +117,37 @@ metadata:
   name: tailscale-robbinsdale
   namespace: home
 spec:
-  externalName: placeholder   # any value - will be overwritten by operator
+  externalName: placeholder   # The operator will update this
   type: ExternalName
 ```
 
-
-The operator schedules a `StatefulSet` that acts as a proxy, routing traffic to the specified MagicDNS name.
+The operator creates:
+1. A StatefulSet running a Tailscale proxy pod
+2. A Service that routes traffic through the proxy
+3. A new node in your tailnet
 
 ![StatefulSet Pod](egress-pod.png)
-![Service Updated with ExternalName set to the Pod's Name](egress-service.png)
-![Tailscale adds a node to the tailnet to act as a proxy](egress-tailscale.png)
+![Service Configuration](egress-service.png)
+![Tailscale Node](egress-tailscale.png)
 
-Now, we have a pod that is able to access the `robbinsdale.your-tailnet.ts.net` Tailscale MagicDNS name:
+You can verify the connectivity:
 
 ```bash
+# Test SSH access
 root@code-server-5fb56db484-f7wg5:/# ssh root@tailscale-robbinsdale.home
-The authenticity of host 'tailscale-robbinsdale.home (10.1.0.3)' can't be established.
-ED25519 key fingerprint is SHA256:Zv7nqSSrTgYQSsjGeDi/Y/XCfvW9bUDBnabYb1c2sgw.
-This key is not known by any other names.
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-Warning: Permanently added 'tailscale-robbinsdale.home' (ED25519) to the list of known hosts.
-root@tailscale-robbinsdale.home's password: 
 
+# Test network connectivity
 root@code-server-5fb56db484-f7wg5:/# ping tailscale-robbinsdale.home -c 2
 PING ts-tailscale-robbinsdale-p4cks.tailscale.svc.cluster.local (10.1.0.3) 56(84) bytes of data.
 64 bytes from ts-tailscale-robbinsdale-p4cks-0.ts-tailscale-robbinsdale-p4cks.tailscale.svc.cluster.local (10.1.0.3): icmp_seq=1 ttl=61 time=0.522 ms
 64 bytes from ts-tailscale-robbinsdale-p4cks-0.ts-tailscale-robbinsdale-p4cks.tailscale.svc.cluster.local (10.1.0.3): icmp_seq=2 ttl=61 time=0.461 ms
-
---- ts-tailscale-robbinsdale-p4cks.tailscale.svc.cluster.local ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1001ms
-rtt min/avg/max/mdev = 0.461/0.491/0.522/0.030 ms
 ```
 
 ## Subnet Routing
 
-The Tailscale Kubernetes Operator allows you to advertise cluster subnets to your tailnet using a `Connector` resource.
+The Tailscale Connector resource allows you to advertise cluster subnets to your tailnet, enabling seamless access to cluster resources.
 
-In this example, I have created a `Connector` that advertises the Local, Pod, Service, and LoadBalancer subnets.
-
-``` yaml
+```yaml
 apiVersion: tailscale.com/v1alpha1
 kind: Connector
 metadata:
@@ -156,69 +158,38 @@ spec:
   hostname: robbinsdale-connector
   subnetRouter:
     advertiseRoutes:
-      - "192.168.50.0/24" # Local
-      - "10.0.0.0/16" # Pod
-      - "10.1.0.0/16" # Service
-      - "10.69.0.0/16" # LoadBalancer
+      - "192.168.50.0/24" # Local network
+      - "10.0.0.0/16"     # Pod CIDR
+      - "10.1.0.0/16"     # Service CIDR
+      - "10.69.0.0/16"    # LoadBalancer CIDR
   exitNode: false
 ```
 
-
-The result is a device in my tailnet that exposes these subnets.
+The Connector creates a Tailscale node that routes traffic between your tailnet and the advertised subnets:
 
 ![Connector Pod](connector-pod.png)
 ![Connector in Tailscale](connector-tailscale.png)
 
-Now, I can reach any resource within my local network and Kubernetes cluster from anywhere in my tailnet!
+### Auto-approving Routes
 
-```bash 
-rajs@macbook:/# ping 192.168.50.1 -c 2
-PING 192.168.50.1 (192.168.50.1) 56(84) bytes of data.
-64 bytes from 192.168.50.1: icmp_seq=1 ttl=64 time=0.022 ms
-64 bytes from 192.168.50.1: icmp_seq=2 ttl=64 time=0.022 ms
-
---- 192.168.50.1 ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1001ms
-rtt min/avg/max/mdev = 0.022/0.022/0.022/0.000 ms
-```
-
-Note: I added the `autoApprovers` field in my Tailscale ACL to automatically approve routes for the `tag:k8s` group.
+To automatically approve subnet routes, add this to your Tailscale ACLs:
 
 ```json
-	"autoApprovers": {
-		"routes": {
-			"192.168.50.0/24": [
-				"tag:k8s",
-				"autogroup:admin",
-			],
-			"10.43.0.0/16": [
-				"tag:k8s",
-				"autogroup:admin",
-			],
-			"10.42.0.0/16": [
-				"tag:k8s",
-				"autogroup:admin",
-			],
-			"10.96.0.0/16": [
-				"tag:k8s",
-				"autogroup:admin",
-			],
-		},
-	},
+"autoApprovers": {
+    "routes": {
+        "192.168.50.0/24": ["tag:k8s", "autogroup:admin"],
+        "10.43.0.0/16": ["tag:k8s", "autogroup:admin"],
+        "10.42.0.0/16": ["tag:k8s", "autogroup:admin"],
+        "10.96.0.0/16": ["tag:k8s", "autogroup:admin"]
+    }
+}
 ```
 
+## Advanced Topics
 
-## Notables
+### Pod Security and Privileges
 
-### Namespace Privilege Escalation
-
-Within the operator, I noticed it was being denied the ability to run privileged containers due to Pod Security Policies.
-
-``` 
-{"level":"info","ts":"2025-01-06T21:27:36Z","logger":"KubeAPIWarningLogger","msg":"would violate PodSecurity \"restricted:latest\": privileged (containers \"sysctler\", \"tailscale\" must not set securityContext.privileged=true), allowPrivilegeEscalation != false (containers \"sysctler\", \"tailscale\" must set securityContext.allowPrivilegeEscalation=false), unrestricted capabilities (containers \"sysctler\", \"tailscale\" must set securityContext.capabilities.drop=[\"ALL\"]), runAsNonRoot != true (pod or containers \"sysctler\", \"tailscale\" must set securityContext.runAsNonRoot=true), seccompProfile (pod or containers \"sysctler\", \"tailscale\" must set securityContext.seccompProfile.type to \"RuntimeDefault\" or \"Localhost\")"}
-```
-
-To resolve this, I updated the namespace to allow privileged containers:
+The Tailscale operator requires privileged access to configure networking. To allow this in namespaces with Pod Security Policies:
 
 ```yaml
 kind: Namespace
@@ -231,20 +202,26 @@ metadata:
     argocd.argoproj.io/sync-options: Prune=false
 ```
 
+### Network Analysis
 
-### Hubble Flows
+Using Hubble, we can observe the Tailscale traffic patterns:
 
-In Tailscale, we can see the UDP flows to the world as well as the connections to the Tailscale Coordination servers over HTTPS.
+![Hubble Network Flows](hubble.png)
 
-![Hubble](hubble.png)
+### NAT Behavior
 
-### NAT Type
+The Connector pod operates in EasyNAT mode, enabling direct UDP connections when possible:
 
-From the ping command, we can see that the NAT type of my Connector pod withink the cluster is likely EasyNAT mode. We can tell this because UDP is yes. In addition, when pinging the connector from outside the cluster we never reach a DERP server. This means I am in direct connection mode and likely not in HardNAT mode.
+![NAT Configuration](nat.png)
 
-![Nat Type](nat.png)
-
-``` bash
+```bash
 rajs@macbook % tailscale ping robbinsdale-connector
 pong from robbinsdale-connector (100.107.45.57) via 67.4.239.75:56786 in 33ms
 ```
+
+This direct connectivity indicates successful NAT traversal without requiring DERP relay servers.
+
+## References
+
+- [How Tailscale Works](https://tailscale.com/blog/how-tailscale-works)
+- [Kubernetes Operator Documentation](https://tailscale.com/kb/1236/kubernetes-operator)
