@@ -106,7 +106,7 @@ One of the most powerful features of the Tailscale Kubernetes Operator is the **
 
 Once configured, you can securely access your cluster from anywhere in your tailnet:
 
-![Operator Running in K9s](k9s.png)
+![Operator Running in K8s](k9s.png)
 
 ## Egress Configuration
 
@@ -211,6 +211,7 @@ metadata:
 ### Network Analysis
 
 Using Hubble, we can observe the Tailscale traffic patterns:
+We can see the UDP flows to the world outbound to other Tailscale nodes, as well as the connections to the Tailscale Coordination servers over HTTPS.
 
 ![Hubble Network Flows](hubble.png)
 
