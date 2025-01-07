@@ -23,6 +23,12 @@ Live Kubernetes manifests for this setup can be found in my [GitHub repository](
 
 Before diving into the operator specifics, it's helpful to understand how Tailscale works. Tailscale creates a secure mesh network using WireGuard for encrypted tunnels between nodes. Instead of traditional hub-and-spoke VPN architecture, Tailscale enables direct peer-to-peer connections between nodes where possible, falling back to DERP (Designated Encrypted Relay for Packets) servers when direct connections aren't possible.
 
+## Installation
+
+Before we can use any of the Tailscale features, we need to install the operator. There are two main components to set up:
+
+Please follow the [Tailscale Kubernetes Operator Installation Guide](https://tailscale.com/kb/1236/kubernetes-operator) for more details.
+
 ## API Server Proxy
 
 One of the most powerful features of the Tailscale Kubernetes Operator is the **API Server Proxy**. This allows you to securely expose your Kubernetes control plane (`kube-apiserver`) over Tailscale, eliminating the need for external management tools like Rancher.
