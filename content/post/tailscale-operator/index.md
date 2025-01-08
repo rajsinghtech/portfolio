@@ -184,9 +184,9 @@ To automatically approve subnet routes, add this to your Tailscale ACLs:
 "autoApprovers": {
     "routes": {
         "192.168.50.0/24": ["tag:k8s", "autogroup:admin"],
-        "10.43.0.0/16": ["tag:k8s", "autogroup:admin"],
-        "10.42.0.0/16": ["tag:k8s", "autogroup:admin"],
-        "10.96.0.0/16": ["tag:k8s", "autogroup:admin"]
+        "10.0.0.0/16": ["tag:k8s", "autogroup:admin"],
+        "10.1.0.0/16": ["tag:k8s", "autogroup:admin"],
+        "10.69.0.0/16": ["tag:k8s", "autogroup:admin"]
     }
 }
 ```
