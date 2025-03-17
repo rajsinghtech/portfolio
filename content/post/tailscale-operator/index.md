@@ -13,6 +13,7 @@ tags:
     - networking
     - security
 weight: 1
+draft: true
 ---
 
 The **Tailscale Kubernetes Operator** enables seamless integration between Kubernetes clusters and Tailscale's secure networking capabilities. In this deep dive, I'll explore how to use the operator to manage Tailscale connectivity in a Kubernetes environment.
