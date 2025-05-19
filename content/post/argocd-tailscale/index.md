@@ -35,6 +35,42 @@ Key parameters:
 
 Configure each cluster with a unique hostname (e.g., `cluster1-k8s-operator`, `cluster2-k8s-operator`).
 
+## Create Egress Services in ArgoCD Cluster
+
+Apply the following configuration to create egress services in the ArgoCD cluster:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster1-k8s-operator
+  annotations:
+    tailscale.com/tailnet-fqdn: cluster1-k8s-operator.<TAILNET>.ts.net
+spec:
+  externalName: placeholder
+  type: ExternalName
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster2-k8s-operator
+  annotations:
+    tailscale.com/tailnet-fqdn: cluster2-k8s-operator.<TAILNET>.ts.net
+spec:
+  externalName: placeholder
+  type: ExternalName
+  ports:
+  - name: https
+    port: 443
+    protocol: TCP
+```
+
+Replace `<TAILNET>` with your Tailscale tailnet name.
+
 ## Configure Tailscale ACL Grants for Cross-Cluster Access
 
 For egress proxies to communicate with Kubernetes API servers exposed by the Tailscale operators, you need to configure appropriate ACL grants in your Tailscale admin console.
@@ -43,8 +79,8 @@ For egress proxies to communicate with Kubernetes API servers exposed by the Tai
 
 Without proper ACL grants:
 1. Access to remote Kubernetes API servers will be blocked by Tailscale\'s access controls
-2. ArgoCD will be unable to manage resources across clusters
-3. Cross-cluster communication will fail with authentication errors
+2. Tailscale Egress proxies will be unable to manage resources across clusters
+3. Cross-cluster API server communication will fail with authentication errors
 
 ### Configuring ACL Grants
 
@@ -78,7 +114,7 @@ Key components of this configuration:
 - `"recorder": ["tag:k8s-recorder"]` - Optional audit logging configuration
 - `"enforceRecorder": false` - Makes audit recording optional
 
-This grant enables ArgoCD (tagged with `tag:k8s`) to communicate with the Kubernetes API servers exposed by the Tailscale operators in your remote clusters.
+This grant enables Tailscale egress proxies (tagged with `tag:k8s`) to communicate with the Kubernetes API servers exposed by the Tailscale operators in your remote clusters.
 
 ## Set Up DNS Configuration in ArgoCD Cluster
 
@@ -136,42 +172,6 @@ data:
 ```
 
 This configuration tells CoreDNS to forward all `ts.net` domain resolution requests to the Tailscale nameserver, allowing pods in your cluster to resolve Tailnet hostnames.
-
-## Create Egress Services in ArgoCD Cluster
-
-Apply the following configuration to create egress services in the ArgoCD cluster:
-
-```yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: cluster1-k8s-operator
-  annotations:
-    tailscale.com/tailnet-fqdn: cluster1-k8s-operator.<TAILNET>.ts.net
-spec:
-  externalName: placeholder
-  type: ExternalName
-  ports:
-  - name: https
-    port: 443
-    protocol: TCP
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: cluster2-k8s-operator
-  annotations:
-    tailscale.com/tailnet-fqdn: cluster2-k8s-operator.<TAILNET>.ts.net
-spec:
-  externalName: placeholder
-  type: ExternalName
-  ports:
-  - name: https
-    port: 443
-    protocol: TCP
-```
-
-Replace `<TAILNET>` with your Tailscale tailnet name.
 
 ## Access Remote Clusters
 
