@@ -3,7 +3,7 @@ title: "Multi-Cluster Kubernetes Setup with Tailscale and ArgoCD"
 date: 2025-05-06 00:00:00+0000
 draft: false
 tags: ["Kubernetes", "Tailscale", "ArgoCD", "Networking", "DevOps"]
-categories: ["Kubernetes"]
+categories: ["Kubernetes", "Tailscale"]
 ---
 
 This guide focuses on configuring the Tailscale Kubernetes operator to expose Kubernetes API servers across multiple clusters for ArgoCD multi-cluster management.
@@ -195,11 +195,11 @@ argocd cluster add cluster2-k8s-operator.<TAILNET>.ts.net --grpc-web
 
 Once configured, ArgoCD will show the clusters as successfully connected within your Tailnet:
 
-![ArgoCD Clusters](/img/argocd-tailscale/argo-clusters.png)
+![ArgoCD Clusters](argo-clusters.png)
 
 Hubble flows will also demonstrate ArgoCD communicating with the Tailscale egress proxies for each remote cluster:
 
-![Hubble Traffic Flow](/img/argocd-tailscale/traffic-flow.png)
+![Hubble Traffic Flow](traffic-flow.png)
 
 ## References
 

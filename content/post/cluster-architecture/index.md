@@ -7,8 +7,9 @@ image: cover.png
 categories:
     - Kubernetes
 tags:
-    - kubernetes
-weight: 1  
+    - Kubernetes
+weight: 1
+draft: false
 ---
 
 Kubernetes is an amazing tool for standing up production-ready infrastructure both on-premises and in the cloud. Throughout my journey as a Homelab Cluster Operator, I have learned many useful practices for managing the world of Kubernetes.

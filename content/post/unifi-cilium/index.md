@@ -7,11 +7,12 @@ image: unifi-cilium.png
 categories:
     - Kubernetes
 tags:
-    - cilium
-    - unifi
-    - bgp
-    - frr
-weight: 1      
+    - Cilium
+    - Unifi
+    - BGP
+    - FRR
+weight: 1
+draft: false
 ---
 
 In this post, I will walk you through the process of advertising routes from a Kubernetes cluster running Cilium to a Unifi router using BGP. This setup allows for dynamic routing between your Kubernetes cluster and your Unifi network, ensuring seamless connectivity and efficient routing. Blending Layer 3/4 Loadbalancing Protocols with Kubernetes.
