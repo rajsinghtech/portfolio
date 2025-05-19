@@ -1,6 +1,6 @@
 ---
 title: "Multi-Cluster Kubernetes Setup with Tailscale and ArgoCD"
-date: 2025-05-18T12:00:00-05:00 
+date: 2025-05-06 00:00:00+0000
 draft: false
 tags: ["Kubernetes", "Tailscale", "ArgoCD", "Networking", "DevOps"]
 categories: ["Kubernetes"]
