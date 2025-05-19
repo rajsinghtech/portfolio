@@ -191,6 +191,16 @@ argocd cluster add cluster1-k8s-operator.<TAILNET>.ts.net --grpc-web
 argocd cluster add cluster2-k8s-operator.<TAILNET>.ts.net --grpc-web
 ```
 
+## Visual Confirmation
+
+Once configured, ArgoCD will show the clusters as successfully connected within your Tailnet:
+
+![ArgoCD Clusters](/img/argocd-tailscale/argo-clusters.png)
+
+Hubble flows will also demonstrate ArgoCD communicating with the Tailscale egress proxies for each remote cluster:
+
+![Hubble Traffic Flow](/img/argocd-tailscale/traffic-flow.png)
+
 ## References
 
 - [Tailscale Kubernetes Operator Documentation](https://tailscale.com/kb/1185/kubernetes/)
