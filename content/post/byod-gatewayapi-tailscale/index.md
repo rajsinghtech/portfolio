@@ -245,7 +245,8 @@ Create `external-dns-pihole-values.yaml` to configure ExternalDNS for your Pi-ho
 ```yaml
 # external-dns-pihole-values.yaml
 fullnameOverride: external-dns-pihole
-
+image:
+  tag: v0.17.0
 logLevel: debug # Or info
 provider: pihole
 
