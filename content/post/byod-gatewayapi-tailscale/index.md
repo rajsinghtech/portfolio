@@ -215,7 +215,7 @@ serviceDns:
   port: 53
   annotations:
     # USER: Replace with your desired Tailscale FQDN for Pi-hole DNS
-    "tailscale.com/tailnet-fqdn": "pihole-dns.your-tailnet-name.ts.net"
+    "tailscale.com/hostname": "pihole-dns"
 
 serviceWeb:
   type: ClusterIP # Keep web UI internal
