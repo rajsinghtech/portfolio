@@ -113,7 +113,6 @@ The `Gateway` resource represents an instance of your gateway listening for traf
     *   `tls.certificateRefs`: Points to the Kubernetes Secret (e.g., `hello-example-https-tls`) where CertManager stores the certificate.
 
 ``` yaml
----
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
