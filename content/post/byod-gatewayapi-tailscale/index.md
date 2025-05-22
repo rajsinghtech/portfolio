@@ -195,7 +195,7 @@ helm repo update
 Pi-hole and ExternalDNS need an admin password. Create a Kubernetes secret (replace `YOUR_PIHOLE_PASSWORD`):
 
 ```bash
-kubectl create secret generic pihole-admin-secret --from-literal=password='YOUR_PIHOLE_PASSWORD' -n pihole-ns # Ensure pihole-ns exists or use --create-namespace
+kubectl create secret generic pihole-admin-secret --from-literal=password='YOUR_PIHOLE_PASSWORD' -n tailscale
 ```
 
 ### 3. Install Pi-hole
