@@ -205,26 +205,20 @@ Create `pihole-values.yaml`. This exposes Pi-hole's DNS (port 53) as a Tailscale
 ```yaml
 # pihole-values.yaml
 admin:
-  existingSecret: "pihole-admin-secret"
-  passwordKey: password
-
+  existingSecret: "pihole-admin-secret" # Name of the K8s secret created above
+  passwordKey: password # Key within the secret
 extraEnvVars:
   FTLCONF_dns_listeningMode: 'all'
-
 serviceDns:
   type: LoadBalancer
-  loadBalancerClass: tailscale
+  loadBalancerClass: tailscale # Expose DNS service via Tailscale
   port: 53
   annotations:
-    # USER: Replace with your desired Tailscale FQDN for Pi-hole DNS
-    "tailscale.com/hostname": "pihole-dns"
-
+    "tailscale.com/hostname": "pihole-dns" # USER: Replace with your desired Tailscale FQDN for Pi-hole DNS
 serviceWeb:
   type: ClusterIP # Keep web UI internal
-
 ingressWeb:
   enabled: false # Disable Pi-hole's ingress if managing access differently
-
 podDnsConfig:
   enabled: false # Avoid conflicts with cluster DNS
 ```
@@ -247,37 +241,30 @@ Create `external-dns-pihole-values.yaml` to configure ExternalDNS for your Pi-ho
 fullnameOverride: external-dns-pihole
 image:
   tag: v0.17.0
-logLevel: debug # Or info
 provider: pihole
-
 env:
   - name: EXTERNAL_DNS_PIHOLE_PASSWORD
     valueFrom:
       secretKeyRef:
         name: pihole-admin-secret # Match secret name for Pi-hole
-        key: password            # Match key in secret
-
+        key: password # Match key in secret
 extraArgs:
   # USER: Adjust Pi-hole server URL if service name/namespace differs.
   # Points to Pi-hole web admin (port 80 internally).
-  # Assumes Pi-hole in 'pihole-ns', release 'pihole' (service: 'pihole-web').
+  # Assumes Pi-hole in 'tailscale', release 'pihole' (service: 'pihole-web').
   - --pihole-server=http://pihole-web.tailscale
   - --pihole-api-version=6
   # USER: Customize label selector to match your Gateway resources.
   - --gateway-label-filter=external-dns==example # Matches label in main guide's Gateway
-
 policy: sync # Or "upsert-only"
-
 sources:
   - gateway-httproute # For hostnames in HTTPRoutes attached to labeled Gateways
-  # - service # To create DNS for annotated K8s services
+  - service # To create DNS for annotated K8s services
   # - ingress # If using Ingress resources
-
 # USER: Define domain(s) for ExternalDNS to manage in Pi-hole (e.g., "example.com").
 domainFilters:
   - "example.com"
   # - "another.internal.domain"
-
 # USER: Customize for TXT record identification.
 txtOwnerId: "my-k8s-cluster-pihole"
 txtPrefix: "k8s-edns-"
