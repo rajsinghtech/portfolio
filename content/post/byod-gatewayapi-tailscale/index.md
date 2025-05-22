@@ -229,7 +229,7 @@ podDnsConfig:
   enabled: false # Avoid conflicts with cluster DNS
 ```
 
-Install Pi-hole (ensure `pihole-ns` namespace exists or use `--create-namespace`):
+Install Pi-hole:
 
 ```bash
 helm install pihole pihole/pihole --version 2.31.0 \
@@ -281,7 +281,7 @@ txtOwnerId: "my-k8s-cluster-pihole"
 txtPrefix: "k8s-edns-"
 ```
 
-Install ExternalDNS (ensure `external-dns-ns` namespace exists or use `--create-namespace`):
+Install ExternalDNS:
 
 ```bash
 # Check for the latest stable ExternalDNS chart version
