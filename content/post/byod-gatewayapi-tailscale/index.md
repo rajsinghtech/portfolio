@@ -261,6 +261,7 @@ extraArgs:
   # Points to Pi-hole web admin (port 80 internally).
   # Assumes Pi-hole in 'pihole-ns', release 'pihole' (service: 'pihole-web').
   - --pihole-server=http://pihole-web.tailscale
+  - --pihole-api-version=6
   # USER: Customize label selector to match your Gateway resources.
   - --gateway-label-filter=external-dns==example # Matches label in main guide's Gateway
 
