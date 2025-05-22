@@ -8,7 +8,7 @@ categories: ["Kubernetes", "Tailscale"]
 
 While Tailscale excels at making services accessible via its managed `*.ts.net` domain names, using your own custom domain (like `hello.example.com`) for services exposed through the Tailscale Kubernetes operator requires a different approach. Tailscale itself doesn't manage DNS records or issue TLS certificates for domains it doesn't control. This guide presents a robust solution to this by integrating the Kubernetes Gateway API (specifically with Envoy Gateway) with ExternalDNS and CertManager. This combination allows you to seamlessly use your custom domains for services on your tailnet, complete with automated DNS and TLS management.
 
-To showcase this, we will utilize (EnvoyGateway)[https://gateway.envoyproxy.io/docs/] in conjunction with Tailscale Operator.
+To showcase this, we will utilize [EnvoyGateway](https://gateway.envoyproxy.io/docs/) in conjunction with Tailscale Operator.
 This setup allows ExternalDNS to manage records for your custom domain in an internal DNS server, which Tailscale's MagicDNS then uses to resolve these names across your tailnet.
 
 ## Prerequisites
