@@ -208,6 +208,9 @@ admin:
   existingSecret: "pihole-admin-secret"
   passwordKey: password
 
+extraEnvVars:
+  FTLCONF_dns_listeningMode: 'all'
+
 serviceDns:
   type: LoadBalancer
   loadBalancerClass: tailscale
@@ -230,7 +233,7 @@ Install Pi-hole (ensure `pihole-ns` namespace exists or use `--create-namespace`
 
 ```bash
 helm install pihole pihole/pihole --version 2.31.0 \
-  -n pihole-ns --create-namespace \
+  -n tailscale \
   -f pihole-values.yaml
 ```
 Pi-hole's DNS service will be available at the FQDN specified (e.g., `pihole-dns.your-tailnet-name.ts.net`).
@@ -257,7 +260,7 @@ extraArgs:
   # USER: Adjust Pi-hole server URL if service name/namespace differs.
   # Points to Pi-hole web admin (port 80 internally).
   # Assumes Pi-hole in 'pihole-ns', release 'pihole' (service: 'pihole-web').
-  - --pihole-server=http://pihole-web.pihole-ns
+  - --pihole-server=http://pihole-web.tailscale
   # USER: Customize label selector to match your Gateway resources.
   - --gateway-label-filter=external-dns==example # Matches label in main guide's Gateway
 
@@ -283,7 +286,7 @@ Install ExternalDNS (ensure `external-dns-ns` namespace exists or use `--create-
 ```bash
 # Check for the latest stable ExternalDNS chart version
 helm install external-dns external-dns/external-dns \
-  -n external-dns-ns --create-namespace \
+  -n tailscale \
   -f external-dns-pihole-values.yaml
 ```
 
