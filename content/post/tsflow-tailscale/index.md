@@ -96,12 +96,13 @@ TSFlow is designed to be deployed alongside your existing infrastructure with mi
 ```bash
 # Run TSFlow with your Tailscale credentials
 docker run -d \
-  -p 8080:8080 \
-  -e TAILSCALE_API_KEY=your-tailscale-api-key \
-  -e TAILSCALE_TAILNET=your-tailnet-name \
-  -e ENVIRONMENT=production \
   --name tsflow \
-  tsflow
+  -p 8080:8080 \
+  -e TAILSCALE_API_KEY=your-api-key \
+  -e TAILSCALE_TAILNET=your-tailnet \
+  -e ENVIRONMENT=production \
+  --restart unless-stopped \
+  ghcr.io/rajsinghtech/tsflow:latest
 
 # Access the dashboard
 open http://localhost:8080
