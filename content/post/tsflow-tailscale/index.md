@@ -16,7 +16,7 @@ Tailscale is an identity-based service network layer. Often times when your tail
 
 As organizations scale their Tailscale deployments, network administrators and DevOps teams face an increasingly complex challenge: understanding how traffic flows through their tailnet. With dozens or hundreds of devices, complex ACL policies, and multiple subnets, gaining visibility into network patterns becomes critical for security, performance, and troubleshooting.
 
-That's why we built **TSFlow** - a modern, real-time web application that transforms your Tailscale network logs into beautiful, interactive visualizations that make network traffic patterns immediately clear.
+That's why we built **[TSFlow](https://github.com/rajsinghtech/tsflow)** - a modern, real-time web application that transforms your Tailscale network logs into beautiful, interactive visualizations that make network traffic patterns immediately clear.
 
 ## The Challenge: Network Visibility at Scale
 
