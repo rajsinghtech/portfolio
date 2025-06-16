@@ -34,7 +34,10 @@ Traditional network monitoring tools weren't designed for the modern, identity-b
 
 TSFlow bridges this gap by leveraging Tailscale's powerful [Network Flow Logging API](https://tailscale.com/api#tag/logging/GET/tailnet/{tailnet}/logging/configuration) to create intuitive, real-time visualizations of your network traffic. Built as a modern web application with a Go backend and React frontend, TSFlow transforms raw network logs into actionable insights.
 
-![TSFlow Dashboard](tsflow.png)
+<video width="100%" controls autoplay muted loop>
+    <source src="tsflow.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
 
 ### Key Features
 
