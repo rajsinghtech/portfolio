@@ -19,7 +19,7 @@ subtitle = "Software Reliability Engineer"
 [sidebar.avatar]
 enabled = true
 local = true
-src = "img/profile-orange.png"
+src = "img/profile-ts.png"
 
 [article]
 headingAnchor = true
