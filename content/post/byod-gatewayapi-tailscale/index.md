@@ -1,9 +1,13 @@
 ---
 title: "BYO Domain Gateway API Tailscale Operator"
 date: 2025-05-21 00:00:00+0000
+slug: byo-domain-gateway-api-tailscale-operator
+description: "Use custom domains with Tailscale services by integrating Kubernetes Gateway API, ExternalDNS, and CertManager for automated DNS and TLS management"
+image: gateway-traffic.png
 draft: false
-tags: ["Kubernetes", "Tailscale", "GatewayAPI", "Networking", "DevOps"]
+tags: ["kubernetes", "tailscale", "gatewayapi", "networking", "devops"]
 categories: ["Kubernetes", "Tailscale"]
+weight: 2
 ---
 
 While Tailscale excels at making services accessible via its managed `*.ts.net` domain names, using your own custom domain (like `hello.example.com`) for services exposed through the Tailscale Kubernetes operator requires a different approach. Tailscale itself doesn't manage DNS records or issue TLS certificates for domains it doesn't control. This guide presents a robust solution to this by integrating the Kubernetes Gateway API (specifically with Envoy Gateway) with ExternalDNS and CertManager. This combination allows you to seamlessly use your custom domains for services on your tailnet, complete with automated DNS and TLS management.

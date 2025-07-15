@@ -7,8 +7,8 @@ image: tsflow.png
 categories:
     - Tailscale
 tags:
-    - Tailscale
-weight: 1
+    - tailscale
+weight: 4
 draft: false
 ---
 

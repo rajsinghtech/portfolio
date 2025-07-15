@@ -8,11 +8,11 @@ categories:
     - Kubernetes
     - Tailscale
 tags:
-    - Kubernetes
-    - Tailscale
-    - Networking
-    - Security
-weight: 1
+    - kubernetes
+    - tailscale
+    - networking
+    - security
+weight: 5
 draft: false
 ---
 

@@ -1,9 +1,13 @@
 ---
 title: "Multi-Cluster Kubernetes Setup with Tailscale and ArgoCD"
 date: 2025-05-06 00:00:00+0000
+slug: multi-cluster-kubernetes-setup-with-tailscale-and-argocd
+description: "Learn how to connect multiple Kubernetes clusters using Tailscale and manage them centrally with ArgoCD for seamless multi-cluster GitOps deployments"
+image: argo-clusters.png
 draft: false
-tags: ["Kubernetes", "Tailscale", "ArgoCD", "Networking", "DevOps"]
+tags: ["kubernetes", "tailscale", "argocd", "networking", "devops"]
 categories: ["Kubernetes", "Tailscale"]
+weight: 3
 ---
 
 This guide focuses on configuring the Tailscale Kubernetes operator to expose Kubernetes API servers across multiple clusters for ArgoCD multi-cluster management.
@@ -78,7 +82,7 @@ For egress proxies to communicate with Kubernetes API servers exposed by the Tai
 ### Why ACL Grants Are Required
 
 Without proper ACL grants:
-1. Access to remote Kubernetes API servers will be blocked by Tailscale\'s access controls
+1. Access to remote Kubernetes API servers will be blocked by Tailscale's access controls
 2. Tailscale Egress proxies will be unable to manage resources across clusters
 3. Cross-cluster API server communication will fail with authentication errors
 
@@ -126,7 +130,7 @@ DNS configuration is a critical component that enables your ArgoCD cluster to re
 2. Communication between clusters would fail as hostname resolution would not work
 3. ArgoCD would be unable to connect to remote Kubernetes API servers
 
-The Tailscale DNS nameserver provides resolution for all nodes in your Tailnet, enabling seamless cross-cluster communication through Tailscale\'s private network.
+The Tailscale DNS nameserver provides resolution for all nodes in your Tailnet, enabling seamless cross-cluster communication through Tailscale's private network.
 
 ### Implementation
 

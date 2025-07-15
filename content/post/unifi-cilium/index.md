@@ -1,17 +1,17 @@
 ---
 title: Advertise Routes from Kubernetes Running Cilium to a Unifi Router over BGP
-description: 
+description: "Configure BGP routing between Cilium-enabled Kubernetes clusters and Unifi routers for dynamic route advertisement and seamless network connectivity"
 slug: cilium-unifi
 date: 2024-11-19 00:00:00+0000
 image: unifi-cilium.png
 categories:
     - Kubernetes
 tags:
-    - Cilium
-    - Unifi
-    - BGP
-    - FRR
-weight: 1
+    - cilium
+    - unifi
+    - bgp
+    - frr
+weight: 7
 draft: false
 ---
 

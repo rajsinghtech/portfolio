@@ -7,8 +7,8 @@ image: cover.png
 categories:
     - Kubernetes
 tags:
-    - Kubernetes
-weight: 1
+    - kubernetes
+weight: 6
 draft: false
 ---
 
