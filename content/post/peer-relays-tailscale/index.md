@@ -1,6 +1,6 @@
 ---
-title: "How Peer Relays Saved My Holiday: A 10x Performance Improvement from India"
-description: "When traveling to India during the holidays, Tailscale's DERP relays became a bottleneck. Peer relays provided a 10x throughput improvement for connecting to my US infrastructure."
+title: "How Peer Relays Saved My Holiday: A 12.5x Performance Improvement from India"
+description: "When traveling to India during the holidays, Tailscale's DERP relays became a bottleneck. Peer relays provided a 12.5x throughput improvement for connecting to my US infrastructure."
 slug: peer-relays-tailscale
 date: 2025-12-25 00:00:00+0000
 image: cover.png
@@ -64,7 +64,7 @@ This isn't a Tailscale problem - it's the reality of how eyeball networks interc
 
 ## The Solution: Peer Relays
 
-[Peer relays](https://tailscale.com/blog/peer-relays-beta), introduced in Tailscale's December 2024 beta, offer an alternative: instead of using Tailscale's managed DERP infrastructure, you can designate your own nodes as traffic relays within your tailnet.
+[Peer relays](https://tailscale.com/blog/peer-relays-beta), introduced in Tailscale's October 2025, offer an alternative: instead of using Tailscale's managed DERP infrastructure, you can designate your own nodes as traffic relays within your tailnet.
 
 The key insight is that you likely already have infrastructure with better network paths than consumer ISPs. If you have a VM in AWS, GCP, or any cloud provider with solid network peering, that node can relay traffic for other devices in your tailnet.
 
