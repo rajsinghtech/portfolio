@@ -19,9 +19,9 @@ During the 2025 holiday season, I traveled to India to visit family. Like any go
 
 ## The Problem: DERP Across Oceans
 
-Tailscale's mesh VPN typically establishes direct peer-to-peer connections between devices using NAT traversal. When direct connections fail (due to restrictive firewalls, CGNAT, or other network conditions), traffic falls back to [DERP (Designated Encrypted Relay for Packets)](https://tailscale.com/kb/1232/derp-servers) servers - Tailscale's managed relay infrastructure.
+Tailscale typically establishes direct peer-to-peer connections between devices using NAT traversal. When direct connections fail (due to restrictive firewalls, CGNAT, or other network conditions), traffic falls back to [DERP (Designated Encrypted Relay for Packets)](https://tailscale.com/kb/1232/derp-servers) servers - Tailscale's managed relay infrastructure that also assists with NAT traversal and connection establishment.
 
-DERP servers work reliably, but they're shared infrastructure - serving all Tailscale users who need relay fallback. They're optimized for availability and broad coverage, not raw throughput for individual connections. When you're in Hyderabad, India trying to connect to infrastructure in Ottawa, Canada, your traffic might route through a DERP server in New York - competing with other users' traffic while traversing suboptimal network paths.
+DERP servers work reliably, but they're shared infrastructure - serving all Tailscale users who need relay assistance. They're optimized for availability and broad coverage, not raw throughput for individual connections. When you're in Hyderabad, India trying to connect to infrastructure in Ottawa, Canada, your traffic might route through a DERP server in New York - competing with other users' traffic while traversing suboptimal network paths.
 
 The real problem became apparent when I ran iperf3 tests. Without peer relays, going through DERP resulted in catastrophic packet loss and throughput averaging **2.2 Mbits/sec** with constant dropouts:
 
@@ -44,6 +44,7 @@ The real problem became apparent when I ran iperf3 tests. Without peer relays, g
 [  7]   0.00-120.00 sec  32.0 MBytes  2.24 Mbits/sec                  sender
 [  7]   0.00-120.30 sec  31.5 MBytes  2.20 Mbits/sec                  receiver
 ```
+*iperf3 TCP throughput test from Hyderabad to Ottawa over DERP. Each row shows one-second intervals - the "0.00 Bytes" lines indicate complete packet loss where no data was transferred.*
 
 Over 120 seconds, I counted dozens of intervals with zero throughput. The connection was barely usable for anything beyond basic SSH.
 
@@ -51,7 +52,7 @@ Over 120 seconds, I counted dozens of intervals with zero throughput. The connec
 
 India's residential ISPs are what network engineers call "[eyeball networks](https://en.wikipedia.org/wiki/Eyeball_network)" - access providers where end users primarily consume content rather than generate it. Traffic flow is heavily asymmetric: users download far more than they upload. This asymmetry shapes how these networks peer with the rest of the internet.
 
-Eyeball networks optimize for inbound content delivery - getting Netflix, YouTube, and web pages to subscribers efficiently. But bidirectional traffic patterns (like VPN tunnels to overseas infrastructure) aren't the priority. The BGP peering arrangements between Indian ISPs and North American networks reflect this: they're designed for pulling content from major CDNs, not for low-latency bidirectional communication with random endpoints.
+Eyeball networks optimize for inbound content delivery - getting Netflix, YouTube, and web pages to subscribers efficiently. But bidirectional traffic patterns (like VPN tunnels to overseas infrastructure) aren't the priority. The [BGP peering arrangements](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) between Indian ISPs and North American networks reflect this: they're designed for pulling content from major CDNs, not for low-latency bidirectional communication with random endpoints.
 
 When Tailscale's DERP servers in New York try to relay traffic between my laptop in Hyderabad and my servers in Ottawa, that traffic is subject to:
 
@@ -83,7 +84,7 @@ The critical advantage is choosing where your relay sits in the network topology
 
 The relay server requires a single UDP port to be accessible. For nodes behind NAT, this typically means port forwarding on your router or configuring security groups in cloud environments.
 
-For my setup, I deployed peer relays on nodes in my Ottawa infrastructure that have direct, stable connectivity to the rest of my homelab. Since these nodes are on the same network as my Kubernetes clusters and exit nodes, traffic from India now routes through infrastructure I control rather than public DERP servers.
+For my setup, I deployed peer relays on nodes at a friend's place in Ottawa - a homelab with a residential fiber connection that serves as the hub for my distributed infrastructure. This network hosts my Kubernetes clusters, exit nodes, and various services. Since the peer relay runs on the same network as the services I'm trying to reach, traffic from India now routes through infrastructure I control rather than public DERP servers.
 
 ## The Results: 12.5x Improvement
 
@@ -108,6 +109,7 @@ After configuring peer relays, I ran the same iperf3 tests. The difference was d
 [  7]   0.00-120.00 sec   396 MBytes  27.7 Mbits/sec                  sender
 [  7]   0.00-120.26 sec   394 MBytes  27.5 Mbits/sec                  receiver
 ```
+*Same test with peer relays enabled. After initial TCP slow-start, throughput stabilizes at 30-50 Mbits/sec with no dropout periods.*
 
 **Results comparison:**
 
