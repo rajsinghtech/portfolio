@@ -1,6 +1,6 @@
 ---
 title: "How Peer Relays Saved My Holiday: A 12.5x Performance Improvement from India"
-description: "When traveling to India during the holidays, Tailscale's DERP relays became a bottleneck. Peer relays provided a 12.5x throughput improvement for connecting to my US infrastructure."
+description: "Visiting family in India meant dreading the inevitable sluggish connections to my homelab. This holiday, peer relays changed that - no more frozen terminals or failed transfers."
 slug: peer-relays-tailscale
 date: 2025-12-25 00:00:00+0000
 image: cover.png
@@ -46,7 +46,7 @@ The real problem became apparent when I ran iperf3 tests. Without peer relays, g
 ```
 *iperf3 TCP throughput test from Delhi to Chicago over DERP. Each row shows one-second intervals - the "0.00 Bytes" lines indicate complete packet loss where no data was transferred.*
 
-Over 120 seconds, I counted dozens of intervals with zero throughput. The connection was barely usable for anything beyond basic SSH - despite having ~30-40 Mbps of bandwidth available on the local network.
+Over 120 seconds, I counted dozens of intervals with zero throughput. The connection was barely usable for anything beyond basic SSH - despite my ISP connection testing at 30-40 Mbps to international destinations under normal conditions.
 
 ## Why India's Networks Are Particularly Challenging
 
@@ -67,7 +67,7 @@ This isn't a Tailscale problem - it's the reality of how eyeball networks interc
 
 [Peer relays](https://tailscale.com/blog/peer-relays-beta), introduced in October 2025, offer an alternative: instead of using Tailscale's managed DERP infrastructure, you can designate your own nodes as traffic relays within your tailnet.
 
-The key insight is that you likely already have infrastructure with better network paths than consumer ISPs. If you have a VM in AWS, GCP, or any cloud provider with solid network peering, that node can relay traffic for other devices in your tailnet.
+The key insight is that you likely already have infrastructure with better network paths than consumer ISPs. Cloud providers like AWS and GCP invest heavily in global backbone networks and direct peering arrangements with ISPs worldwide - the kind of routing optimization that residential connections simply don't get. If you have a VM in any of these providers, that node can relay traffic for other devices in your tailnet.
 
 ### How Peer Relays Work
 
