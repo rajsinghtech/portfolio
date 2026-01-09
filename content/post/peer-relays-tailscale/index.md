@@ -15,15 +15,15 @@ weight: 1
 draft: false
 ---
 
-During the 2025 holiday season, I traveled to India to visit family. Like any good engineer, I expected to stay connected to my homelab infrastructure back in North America - accessing my Kubernetes clusters, using exit nodes for secure browsing, and managing various services. What I didn't expect was just how painful that experience would become when international networks had me relying on Tailscale's default relay infrastructure.
+During the 2025 holiday season, I traveled to India to visit family. Like any good engineer, I expected to stay connected to my homelab infrastructure back in hat  America - accessing my Kubernetes clusters, using exit nodes for secure browsing, and managing various services. What I didn't expect was just how painful that experience would become when international networks had me relying on Tailscale's default relay infrastructure.
 
 ## The Problem: DERP Across Oceans
 
 Tailscale typically establishes direct peer-to-peer connections between devices using NAT traversal. When direct connections fail (due to restrictive firewalls, CGNAT, or other network conditions), traffic falls back to [DERP (Designated Encrypted Relay for Packets)](https://tailscale.com/kb/1232/derp-servers) servers - Tailscale's managed relay infrastructure that also assists with NAT traversal and connection establishment.
 
-DERP servers work reliably, but they're shared infrastructure - serving all Tailscale users who need relay assistance. They're optimized for availability and broad coverage, not raw throughput for individual connections. When you're in Delhi, India and trying to connect to infrastructure in Chicago, your traffic might route through a DERP server in New York. That leaves your traffic competing with other users' traffic while traversing suboptimal network paths.
+DERP servers work reliably, but they're shared infrastructure - serving all Tailscale users who need relay assistance. They're optimized for availability and broad coverage, not raw throughput for individual connections. When you're in Delhi, India and trying to connect to infrastructure in Chicago, your traffic routes through a DERP server—sharing capacity with other users and subject to throughput limits that ensure fair access for everyone.
 
-The real problem became apparent when I ran iperf3 tests. Sending all my traffic through DERP, across an ocean, resulted in catastrophic packet loss and throughput averaging 2.2 Mbits/sec with constant dropouts:
+The real problem became apparent when I ran iperf3 tests. Sending all my traffic through DERP, across an ocean, resulted in severely throttled throughput averaging 2.2 Mbits/sec:
 
 ```
 [ ID] Interval           Transfer     Bitrate
@@ -33,52 +33,45 @@ The real problem became apparent when I ran iperf3 tests. Sending all my traffic
 [  7]   3.00-4.00   sec  2.50 MBytes  21.0 Mbits/sec
 [  7]   4.00-5.00   sec  1.12 MBytes  9.41 Mbits/sec
 [  7]   5.00-6.00   sec  2.38 MBytes  19.9 Mbits/sec
-[  7]   6.00-7.00   sec  0.00 Bytes  0.00 bits/sec    <- packet loss
+[  7]   6.00-7.00   sec  0.00 Bytes  0.00 bits/sec
 [  7]   7.00-8.00   sec   640 KBytes  5.26 Mbits/sec
-[  7]   8.00-9.01   sec  0.00 Bytes  0.00 bits/sec    <- packet loss
-[  7]   9.01-10.00  sec  0.00 Bytes  0.00 bits/sec    <- packet loss
-[  7]  10.00-11.00  sec  0.00 Bytes  0.00 bits/sec    <- packet loss
+[  7]   8.00-9.01   sec  0.00 Bytes  0.00 bits/sec
+[  7]   9.01-10.00  sec  0.00 Bytes  0.00 bits/sec
+[  7]  10.00-11.00  sec  0.00 Bytes  0.00 bits/sec
 ...
 - - - - - - - - - - - - - - - - - - - - - - - - -
 [ ID] Interval           Transfer     Bitrate
 [  7]   0.00-120.00 sec  32.0 MBytes  2.24 Mbits/sec                  sender
 [  7]   0.00-120.30 sec  31.5 MBytes  2.20 Mbits/sec                  receiver
 ```
-*iperf3 TCP throughput test from Delhi to Chicago over DERP. Each row shows one-second intervals - the "0.00 Bytes" lines indicate complete packet loss where no data was transferred.*
+*iperf3 TCP throughput test from Delhi to Chicago over DERP. The wildly variable sender bitrate reflects DERP's QoS shaping the connection. The receiver total (31.5 MB over 120 seconds) tells the real story: ~2.2 Mbits/sec sustained.*
 
-Over 120 seconds, I counted dozens of intervals with zero throughput. The connection was barely usable for anything beyond basic SSH - despite my ISP connection testing at 30-40 Mbps to international destinations under normal conditions.
+The connection was barely usable for anything beyond basic SSH - despite my ISP connection testing at 30-40 Mbps to international destinations under normal conditions.
 
-## Why India's Networks Are Particularly Challenging
+## Why Direct Connections Failed
 
-India's residential ISPs are what network engineers call "[eyeball networks](https://en.wikipedia.org/wiki/Eyeball_network)": access providers where end users primarily consume content rather than generate it. Traffic flow is heavily asymmetric, with users downloading far more than they upload. This asymmetry shapes how these networks peer with the rest of the internet.
+India's residential networks are notoriously difficult for peer-to-peer connectivity. Carrier-grade NAT (CGNAT), strict firewalls, and asymmetric routing meant Tailscale couldn't establish direct connections between my laptop in Delhi and my infrastructure in Chicago. Every connection attempt fell back to DERP relay.
 
-Eyeball networks optimize for inbound content delivery, efficiently getting Netflix, YouTube, and web pages to viewers. Bidirectional traffic patterns, like VPN tunnels to overseas infrastructure, are not the priority. The [Border Gateway Protocol (BGP) peering arrangements](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) between Indian ISPs and North American networks reflect this: they're designed for pulling content from major CDNs, not for low-latency bidirectional communication with random endpoints.
+That's exactly what DERP is designed for—it's the reliable fallback when direct connections aren't possible. But DERP is shared infrastructure, serving all Tailscale users globally. It's optimized for availability and broad coverage, with throughput limits that ensure fair access for everyone. For occasional relay traffic, this works great. For sustained high-bandwidth connections across oceans, you start hitting those limits.
 
-When Tailscale's DERP servers in New York try to relay traffic between my laptop in Delhi and my servers in Chicago, that traffic is subject to:
-
-1. **Suboptimal BGP routing** through peering points not designed for this traffic pattern
-2. **Congested international links** shared with content delivery traffic
-3. **High latency variability** due to routing that prioritizes cost over performance
-4. **Packet loss** at oversubscribed peering exchanges
-
-This isn't a Tailscale problem—it's the reality of how eyeball networks interconnect with the broader internet, with DERPs trying the best they can to help. But another option has recently become available.
+The core issue wasn't the network path—it was that DERP's shared capacity couldn't deliver the throughput I needed for productive work.
 
 ## The Solution: Peer Relays
 
-[Peer relays](https://tailscale.com/blog/peer-relays-beta), introduced in October 2025, offer an alternative: instead of using Tailscale's managed DERP infrastructure, you can designate your own nodes as traffic relays within your tailnet.
+[Peer relays](https://tailscale.com/blog/peer-relays-beta), introduced in October 2025, offer an alternative: instead of using Tailscale's managed DERP infrastructure, you can designate your own nodes as high-throughput traffic relays within your tailnet.
 
-The key insight is that you likely already have infrastructure with better network paths than consumer ISPs. Cloud providers like AWS and GCP invest heavily in global backbone networks and direct peering arrangements with ISPs worldwide - the kind of routing optimization that residential connections simply don't get. If you have a VM in any of these providers, that node can relay traffic for other devices in your tailnet.
+The key difference is capacity. DERP servers are shared across all Tailscale users and apply throughput limits to ensure fair access. Peer relays are dedicated to your tailnet—no competing for bandwidth, no QoS throttling. You get the full capacity of whatever node you designate as a relay.
 
 ### How Peer Relays Work
 
 Peer relays function similarly to DERP servers but run on your own infrastructure:
 
 1. A node with good connectivity is configured as a peer relay
-2. When direct connections fail between other nodes, Tailscale can route through your peer relay instead of DERP
+2. When direct connections fail between other nodes, Tailscale routes through your peer relay instead of DERP
 3. Traffic remains end-to-end encrypted via WireGuard—the relay only sees encrypted packets
 4. Tailscale maintains preference hierarchy: direct connection > peer relay > DERP
 
-The critical advantage is choosing where your relay sits in the network topology. By placing peer relays in cloud regions with strong BGP peering, you can bypass the problematic paths that plague connections from eyeball networks and other complications.
+The critical advantage is dedicated relay capacity. For bandwidth-intensive use cases like file transfers, media streaming, or in my case, managing remote infrastructure, peer relays remove the throughput ceiling that shared DERP infrastructure imposes.
 
 ## Setting Up Peer Relays
 
@@ -117,31 +110,32 @@ After configuring peer relays, I ran the same iperf3 tests. The difference was d
 |--------|---------------------------|------------------|
 | Average Throughput | 2.2 Mbits/sec | 27.5 Mbits/sec |
 | Total Transfer (120s) | 32 MB | 394 MB |
-| Packet Loss | Severe (frequent 0 byte intervals) | Minimal |
-| Connection Stability | Highly variable | Consistent |
+| Throughput Variability | High (QoS shaping) | Low |
+| Connection Stability | Throttled | Consistent |
 
 That's a **12.5x improvement** in throughput, plus dramatically more stable connections. The peer relay test showed consistent 30-50 Mbits/sec intervals with no sustained dropout periods.
 
 ## Why This Matters
 
-With peer relays, you get dedicated relay capacity serving only your tailnet—no competing with other users for bandwidth. You also control where that relay sits in the network topology, letting you leverage cloud infrastructure with better peering than what's available to consumer ISPs.
+DERP does its job well—it provides reliable relay connectivity for millions of Tailscale users. But "reliable" and "high-throughput" are different goals. Peer relays give you dedicated capacity when you need sustained bandwidth that shared infrastructure can't provide.
 
 ### Other Use Cases
 
-- **Enterprise environments** - Keep traffic within your network perimeter rather than routing through external relays
-- **Restrictive networks** - Bypass firewalls that may throttle or block DERP server IP ranges
+- **Large file transfers** - Move data between devices without DERP throughput limits
+- **Media streaming** - Stream video or audio between tailnet devices smoothly
+- **Enterprise environments** - Keep relay traffic within your network perimeter
 - **Performance-critical applications** - Guarantee relay performance by controlling the relay infrastructure
 
 ## Conclusion
 
 Peer relays transformed my holiday connectivity from barely usable to genuinely productive. Instead of waiting 30-plus seconds for kubectl commands to complete or giving up on transferring files to my homelab, I could work almost as efficiently as if I were back home.
 
-If you regularly travel to regions with challenging internet infrastructure, or if you've noticed DERP-relayed connections underperforming, peer relays are worth exploring. The setup is minimal, and the performance benefits can be substantial.
+If you've noticed DERP-relayed connections underperforming for bandwidth-intensive tasks, peer relays are worth exploring. The setup is minimal—designate a node, open a UDP port—and you get dedicated relay capacity that isn't subject to shared infrastructure limits.
 
-The ability to control your relay infrastructure is one more step toward Tailscale's vision of giving users complete control over their network topology - not just the mesh, but the fallback paths as well.
+DERP remains the reliable fallback for the majority of relay scenarios. But when you need high throughput, peer relays fill that gap.
 
 ## References
 
+- [Peer Relays Documentation](https://tailscale.com/kb/1517/peer-relays)
 - [Peer Relays Beta Announcement](https://tailscale.com/blog/peer-relays-beta)
 - [DERP Servers Documentation](https://tailscale.com/kb/1232/derp-servers)
-- [Tailscale Network Architecture](https://tailscale.com/blog/how-tailscale-works)
