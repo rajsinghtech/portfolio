@@ -21,9 +21,9 @@ Like any engineer visiting family abroad, I expected to stay connected to my hom
 
 ## The Problem: DERP Across Oceans
 
-Tailscale typically establishes direct peer-to-peer connections between devices using NAT traversal. When direct connections fail (due to restrictive firewalls, CGNAT, or other network conditions), traffic falls back to [DERP (Designated Encrypted Relay for Packets)](https://tailscale.com/kb/1232/derp-servers) servers - Tailscale's managed relay infrastructure that also assists with NAT traversal and connection establishment.
+Tailscale typically establishes direct peer-to-peer connections between devices using NAT traversal. When direct connections fail (due to restrictive firewalls, CGNAT, or other network conditions), traffic falls back to [DERP (Designated Encrypted Relay for Packets)](https://tailscale.com/kb/1232/derp-servers) servers—Tailscale's managed relay infrastructure that also assists with NAT traversal and connection establishment.
 
-DERP servers work reliably, but they're shared infrastructure - serving all Tailscale users who need relay assistance. They're optimized for availability and broad coverage, not raw throughput for individual connections. When you're in Delhi, India and trying to connect to infrastructure in Robbinsdale, MN, your traffic routes through a DERP server—sharing capacity with other users and subject to throughput limits that ensure fair access for everyone.
+DERP servers work reliably, but they're shared infrastructure—serving all Tailscale users who need relay assistance. They're optimized for availability and broad coverage, not raw throughput for individual connections. When you're in Delhi, India and trying to connect to infrastructure in Robbinsdale, MN, your traffic routes through a DERP server—sharing capacity with other users and subject to throughput limits that ensure fair access for everyone.
 
 The real problem became apparent when I ran iperf3 tests. Sending all my traffic through DERP, across an ocean, resulted in severely throttled throughput averaging 2.2 Mbits/sec:
 
@@ -46,7 +46,7 @@ The real problem became apparent when I ran iperf3 tests. Sending all my traffic
 [  7]   0.00-120.00 sec  32.0 MBytes  2.24 Mbits/sec                  sender
 [  7]   0.00-120.30 sec  31.5 MBytes  2.20 Mbits/sec                  receiver
 ```
-*iperf3 TCP throughput test from Delhi to Robbinsdale over DERP. The wildly variable sender bitrate reflects DERP's QoS shaping the connection. The receiver total (31.5 MB over 120 seconds) tells the real story: ~2.2 Mbits/sec sustained.*
+*iperf3 TCP throughput test from Delhi to Robbinsdale over DERP. The wildly variable sender bitrate reflects DERP QoS shaping on the connection. The receiver total (31.5 MB over 120 seconds) tells the real story: ~2.2 Mbits/sec sustained.*
 
 The connection was barely usable for anything beyond basic SSH—despite my ISP connection testing at 30-40 Mbits/sec to international destinations under normal conditions.
 
@@ -72,9 +72,9 @@ pong from robbinsdale-subnetrouter-0 (100.69.114.112) via DERP(ord) in 478ms
 
 Three red flags here:
 
-1. **Every ping routes through DERP** - The `via DERP(ord)` indicates all traffic is being relayed through Tailscale's Chicago DERP server. Why Chicago? Tailscale selects the DERP server with the lowest combined latency to both endpoints. For Delhi-to-Minneapolis traffic, Chicago (`ord`) typically wins because it's geographically close to my Robbinsdale infrastructure while still being reasonably reachable from India via trans-Pacific or trans-Atlantic routes
-2. **High and variable latency** - 441-478ms with noticeable jitter when it should be more consistent
-3. **"direct connection not established"** - Tailscale explicitly telling you NAT traversal failed
+1. **Every ping routes through DERP** — The `via DERP(ord)` indicates all traffic is being relayed through Tailscale's Chicago DERP server. Why Chicago? Tailscale selects the DERP server with the lowest combined latency to both endpoints. For Delhi-to-Minneapolis traffic, Chicago (`ord`) typically wins because it's geographically close to my Robbinsdale infrastructure while still being reasonably reachable from India via trans-Pacific or trans-Atlantic routes.
+2. **High and variable latency** — 441-478ms with noticeable jitter when it should be more consistent
+3. **"direct connection not established"** — Tailscale explicitly telling you NAT traversal failed
 
 When Tailscale can establish a direct connection, you'll see `via <ip>:<port>` instead of `via DERP`. The fact that it never upgraded to direct—even after multiple pings—confirmed that CGNAT was blocking hole punching entirely.
 
@@ -95,7 +95,7 @@ Stunner will classify your NAT type and rate it as "Easy" or "Hard" for hole pun
 
 **Tailscale's Built-in Diagnostics:**
 
-Tailscale includes `netcheck` which provides similar diagnostics plus Tailscale-specific information:
+Tailscale includes `netcheck`, which provides similar diagnostics plus Tailscale-specific information:
 
 ```bash
 tailscale netcheck
