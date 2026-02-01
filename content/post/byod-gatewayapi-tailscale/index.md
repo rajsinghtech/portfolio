@@ -3,7 +3,6 @@ title: "BYO Domain Gateway API Tailscale Operator"
 date: 2025-05-21 00:00:00+0000
 slug: byo-domain-gateway-api-tailscale-operator
 description: "Use custom domains with Tailscale services by integrating Kubernetes Gateway API, ExternalDNS, and CertManager for automated DNS and TLS management"
-image: gateway-traffic.png
 draft: false
 tags: ["kubernetes", "tailscale", "gatewayapi", "networking", "devops"]
 categories: ["Kubernetes", "Tailscale"]
