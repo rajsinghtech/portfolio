@@ -42,34 +42,45 @@ Tailscale solves all of these by providing:
 
 We're deploying a **multi-primary** Istio topology where each cluster runs its own control plane and discovers services from all clusters in the mesh.
 
+### Why Egress Proxies are Required
+
+**Critical concept:** Pods in Kubernetes cannot directly reach Tailscale CGNAT IPs (100.x.x.x). When Istio sidecars try to connect to remote east-west gateways, they need a way to route traffic through Tailscale.
+
+The solution is **egress proxy services** - ClusterIP services that route traffic through Tailscale proxy pods:
+
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                        Tailscale Mesh Network                       │
-│                                                                     │
-│  ┌─────────────────────────┐       ┌─────────────────────────┐     │
-│  │       Cluster 1         │       │       Cluster 2         │     │
-│  │                         │       │                         │     │
-│  │  ┌─────────────────┐    │       │    ┌─────────────────┐  │     │
-│  │  │     istiod      │◄───┼───────┼───►│     istiod      │  │     │
-│  │  └─────────────────┘    │       │    └─────────────────┘  │     │
-│  │          │              │       │            │            │     │
-│  │  ┌───────▼───────────┐  │       │  ┌─────────▼─────────┐  │     │
-│  │  │ East-West Gateway │◄─┼───────┼─►│ East-West Gateway │  │     │
-│  │  │  (Tailscale LB)   │  │       │  │  (Tailscale LB)   │  │     │
-│  │  └───────────────────┘  │       │  └───────────────────┘  │     │
-│  │                         │       │                         │     │
-│  │  ┌─────────────────┐    │       │    ┌─────────────────┐  │     │
-│  │  │   k8s-operator  │◄───┼───────┼───►│   k8s-operator  │  │     │
-│  │  │ (API Proxy)     │    │       │    │ (API Proxy)     │  │     │
-│  │  └─────────────────┘    │       │    └─────────────────┘  │     │
-│  └─────────────────────────┘       └─────────────────────────┘     │
-└─────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              Data Plane Flow                                │
+│                                                                             │
+│  Cluster 1                                    Cluster 2                     │
+│  ┌───────────────────────────────────┐       ┌──────────────────────────┐  │
+│  │                                   │       │                          │  │
+│  │  ┌─────────┐     ┌─────────────┐  │       │  ┌────────────────────┐  │  │
+│  │  │   Pod   │────►│Istio Sidecar│  │       │  │  East-West Gateway │  │  │
+│  │  └─────────┘     └──────┬──────┘  │       │  │  (port 15443)      │  │  │
+│  │                         │         │       │  └─────────┬──────────┘  │  │
+│  │                         ▼         │       │            │             │  │
+│  │  ┌──────────────────────────────┐ │       │            ▼             │  │
+│  │  │   Egress ClusterIP Service   │ │       │  ┌──────────────────┐    │  │
+│  │  │ (cluster2-eastwest-egress)   │ │       │  │  Remote Service  │    │  │
+│  │  └──────────────┬───────────────┘ │       │  └──────────────────┘    │  │
+│  │                 │                 │       │                          │  │
+│  │                 ▼                 │       └──────────────────────────┘  │
+│  │  ┌──────────────────────────────┐ │                    ▲                │
+│  │  │    Tailscale Proxy Pod       │─┼────────────────────┘                │
+│  │  │    (proxy-class: common)     │ │     Tailscale Network              │
+│  │  └──────────────────────────────┘ │     (100.x.x.x)                     │
+│  └───────────────────────────────────┘                                     │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 Key components:
 - **Tailscale Kubernetes Operator** - Provides API server proxy and LoadBalancer class
 - **East-West Gateways** - Handle cross-cluster traffic via Tailscale network
+- **Egress Proxy Services** - Enable pods to route traffic through Tailscale (pods can't reach 100.x.x.x directly!)
 - **Istiod** - Control plane discovers services in remote clusters through API proxy
+
+> **Important:** Without egress proxy services, Istio sidecars will fail to connect to remote gateways with errors like "no healthy upstream".
 
 ## Prerequisites
 
@@ -339,10 +350,12 @@ helm install istio-eastwestgateway istio/gateway \
 
 Repeat for cluster2 with updated hostname and network values.
 
-Create the Gateway resource to expose services:
+### ⚠️ Required: Create the Gateway CRD
+
+**This step is critical and often missed.** Without this Gateway resource, the east-west gateway pods have no listener configured on port 15443 and will reject all incoming traffic.
 
 ```yaml
-apiVersion: networking.istio.io/v1
+apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: cross-network-gateway
@@ -361,40 +374,173 @@ spec:
     - "*.local"
 ```
 
-## Step 8: Configure Mesh Networks
+Apply this Gateway resource to **both clusters**:
+```bash
+kubectl apply -f cross-network-gateway.yaml --context=cluster1
+kubectl apply -f cross-network-gateway.yaml --context=cluster2
+```
 
-Update Istio to know about the network topology:
+You can verify the listener is active:
+```bash
+istioctl proxy-config listeners deploy/istio-eastwestgateway -n istio-system --context=cluster1 | grep 15443
+```
+
+If you see no output, the Gateway CRD is missing or not selecting your gateway pods correctly.
+
+## Step 8: Create Egress Proxy Services
+
+**Critical for data plane traffic:** Pods in Kubernetes cannot reach Tailscale CGNAT IPs (100.x.x.x) directly. You must create egress proxy services that route traffic through Tailscale.
+
+### Create a ProxyClass (Recommended)
+
+> **Note:** As of Tailscale operator v1.92.5, there's a known bug where `ProxyGroup` egress proxies don't listen on the configured ports. Use `proxy-class` annotation instead.
 
 ```yaml
-apiVersion: v1
-kind: ConfigMap
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
 metadata:
-  name: istio
-  namespace: istio-system
-data:
-  mesh: |-
-    meshNetworks:
-      cluster1:
-        endpoints:
-        - fromRegistry: cluster1
-        gateways:
-        - address: cluster1-istio-eastwestgateway.your-tailnet.ts.net
-          port: 15443
-      cluster2:
-        endpoints:
-        - fromRegistry: cluster2
-        gateways:
-        - address: cluster2-istio-eastwestgateway.your-tailnet.ts.net
-          port: 15443
+  name: common
+spec:
+  statefulSet:
+    pod:
+      tailscaleContainer:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
 ```
 
-Apply and restart istiod:
-```bash
-kubectl apply -f mesh-networks.yaml --context=cluster1
-kubectl apply -f mesh-networks.yaml --context=cluster2
-kubectl rollout restart deployment/istiod -n istio-system --context=cluster1
-kubectl rollout restart deployment/istiod -n istio-system --context=cluster2
+### Create Egress Services
+
+**In Cluster 1** (to reach Cluster 2's east-west gateway):
+```yaml
+---
+# This Service tells Tailscale operator to create an egress proxy
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster2-istio-eastwestgateway-ts
+  namespace: istio-system
+  annotations:
+    tailscale.com/tailnet-fqdn: cluster2-istio-eastwestgateway.your-tailnet.ts.net
+    tailscale.com/proxy-class: common
+spec:
+  externalName: placeholder
+  type: ExternalName
+  ports:
+  - name: tls
+    port: 15443
+    protocol: TCP
+---
+# This ExternalName service routes to the operator-managed ClusterIP
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster2-istio-eastwestgateway
+  namespace: istio-system
+spec:
+  type: ExternalName
+  externalName: cluster2-istio-eastwestgateway-ts.istio-system.svc.cluster.local
+  ports:
+  - name: tls
+    port: 15443
+    protocol: TCP
 ```
+
+**In Cluster 2** (to reach Cluster 1's east-west gateway):
+```yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster1-istio-eastwestgateway-ts
+  namespace: istio-system
+  annotations:
+    tailscale.com/tailnet-fqdn: cluster1-istio-eastwestgateway.your-tailnet.ts.net
+    tailscale.com/proxy-class: common
+spec:
+  externalName: placeholder
+  type: ExternalName
+  ports:
+  - name: tls
+    port: 15443
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cluster1-istio-eastwestgateway
+  namespace: istio-system
+spec:
+  type: ExternalName
+  externalName: cluster1-istio-eastwestgateway-ts.istio-system.svc.cluster.local
+  ports:
+  - name: tls
+    port: 15443
+    protocol: TCP
+```
+
+Wait for the Tailscale operator to create the egress proxy pods:
+```bash
+kubectl get pods -n istio-system -l tailscale.com/parent-resource-type=svc
+```
+
+## Step 9: Configure Mesh Networks
+
+Update Istio to know about the network topology. **Important:** Use local egress service DNS names, not Tailscale FQDNs directly. This ensures traffic routes through the egress proxy.
+
+**In Cluster 1**, configure `global.meshNetworks` in istiod values:
+```yaml
+global:
+  meshNetworks:
+    cluster1:
+      endpoints:
+      - fromRegistry: cluster1
+      gateways:
+      - address: istio-eastwestgateway.istio-system.svc.cluster.local
+        port: 15443
+    cluster2:
+      endpoints:
+      - fromRegistry: cluster2
+      gateways:
+      - address: cluster2-istio-eastwestgateway.istio-system.svc.cluster.local
+        port: 15443
+```
+
+**In Cluster 2**, configure:
+```yaml
+global:
+  meshNetworks:
+    cluster1:
+      endpoints:
+      - fromRegistry: cluster1
+      gateways:
+      - address: cluster1-istio-eastwestgateway.istio-system.svc.cluster.local
+        port: 15443
+    cluster2:
+      endpoints:
+      - fromRegistry: cluster2
+      gateways:
+      - address: istio-eastwestgateway.istio-system.svc.cluster.local
+        port: 15443
+```
+
+Apply via Helm upgrade:
+```bash
+helm upgrade istiod istio/istiod \
+  --namespace istio-system \
+  --kube-context=cluster1 \
+  --reuse-values \
+  -f cluster1-mesh-networks.yaml
+
+helm upgrade istiod istio/istiod \
+  --namespace istio-system \
+  --kube-context=cluster2 \
+  --reuse-values \
+  -f cluster2-mesh-networks.yaml
+```
+
+> **Why local DNS names?** Istio sidecars can't resolve or route to Tailscale FQDNs (100.x.x.x IPs). By pointing to local egress services, traffic flows: `sidecar → egress ClusterIP → Tailscale proxy pod → Tailscale network → remote gateway`.
 
 ## Verifying the Setup
 
@@ -492,20 +638,86 @@ This routes 80% of traffic to local endpoints with automatic failover to remote 
 
 ## Troubleshooting
 
-### Gateway not getting Tailscale IP
-Check that the Tailscale operator is running and ACLs allow the `tag:istio-eastwestgateway` tag.
+### "no healthy upstream" errors
 
-### Istio can't discover remote services
-Verify DNS resolution works:
+This is the most common issue and usually indicates one of two problems:
+
+**1. Missing Gateway CRD (most common)**
+
+The east-west gateway pods have no listener without the Gateway resource:
+```bash
+# Check if 15443 listener exists
+istioctl proxy-config listeners deploy/istio-eastwestgateway -n istio-system | grep 15443
+
+# If no output, apply the Gateway CRD (see Step 7)
+```
+
+**2. Egress proxy not forwarding traffic**
+
+Verify the egress proxy is running and listening:
+```bash
+# Check egress proxy pods exist
+kubectl get pods -n istio-system -l tailscale.com/parent-resource-type=svc
+
+# Check the Tailscale operator-created service has a ClusterIP
+kubectl get svc -n istio-system | grep eastwestgateway
+```
+
+### Endpoints showing internal IPs with `failed_outlier_check`
+
+This indicates the egress proxy isn't working correctly. Debug with:
+```bash
+# Check endpoint resolution
+istioctl proxy-config endpoints <pod-name> --cluster "outbound|80||service.namespace.svc.cluster.local"
+
+# If you see internal IPs (10.x.x.x, 172.x.x.x) instead of being routed through egress, 
+# verify meshNetworks points to local egress service DNS names
+```
+
+### ProxyGroup egress not listening on ports
+
+**Known bug in Tailscale operator v1.92.5:** ProxyGroup-based egress proxies may not listen on the configured ports. 
+
+**Workaround:** Use `proxy-class` annotation instead of ProxyGroup:
+```yaml
+annotations:
+  tailscale.com/proxy-class: common  # Use this
+  # NOT: tailscale.com/proxy-group: my-group
+```
+
+### Gateway not getting Tailscale IP
+
+Check that the Tailscale operator is running and ACLs allow the `tag:istio-eastwestgateway` tag:
+```bash
+# Check gateway service status
+kubectl get svc istio-eastwestgateway -n istio-system
+
+# Check Tailscale operator logs
+kubectl logs -n tailscale -l app.kubernetes.io/name=tailscale-operator
+```
+
+### Istio can't discover remote services (control plane)
+
+Verify DNS resolution works for API server proxy:
 ```bash
 kubectl run test --image=curlimages/curl --rm -it -- nslookup cluster2-k8s-operator.your-tailnet.ts.net
 ```
 
 ### mTLS certificate errors
+
 Ensure all clusters use the same root CA:
 ```bash
-kubectl get secret cacerts -n istio-system -o jsonpath='{.data.root-cert\.pem}' | base64 -d
+kubectl get secret cacerts -n istio-system -o jsonpath='{.data.root-cert\.pem}' | base64 -d | openssl x509 -noout -subject
 ```
+
+### Debug checklist
+
+1. ✅ Gateway CRD applied? (`kubectl get gateway -n istio-system`)
+2. ✅ Gateway has 15443 listener? (`istioctl proxy-config listeners deploy/istio-eastwestgateway -n istio-system`)
+3. ✅ Egress proxy pods running? (`kubectl get pods -n istio-system -l tailscale.com/parent-resource-type=svc`)
+4. ✅ meshNetworks using local egress DNS names? (check istiod configmap or helm values)
+5. ✅ Remote secret configured? (`kubectl get secret -n istio-system | grep remote`)
+6. ✅ Tailscale ACLs allow traffic between gateways?
 
 ## References
 
