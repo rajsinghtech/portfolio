@@ -44,7 +44,7 @@ We're deploying a **multi-primary** Istio topology where each cluster runs its o
 
 ### Why Egress Proxies are Required
 
-**Critical concept:** Pods in Kubernetes cannot directly reach Tailscale CGNAT IPs (100.x.x.x). When Istio sidecars try to connect to remote east-west gateways, they need a way to route traffic through Tailscale.
+Pods in Kubernetes cannot directly reach Tailscale CGNAT IPs (100.x.x.x). When Istio sidecars connect to remote east-west gateways, they need a way to route traffic through Tailscale.
 
 The solution is **egress proxy services** - ClusterIP services that route traffic through Tailscale proxy pods:
 
@@ -79,8 +79,6 @@ Key components:
 - **East-West Gateways** - Handle cross-cluster traffic via Tailscale network
 - **Egress Proxy Services** - Enable pods to route traffic through Tailscale (pods can't reach 100.x.x.x directly!)
 - **Istiod** - Control plane discovers services in remote clusters through API proxy
-
-> **Important:** Without egress proxy services, Istio sidecars will fail to connect to remote gateways with errors like "no healthy upstream".
 
 ## Prerequisites
 
@@ -350,9 +348,9 @@ helm install istio-eastwestgateway istio/gateway \
 
 Repeat for cluster2 with updated hostname and network values.
 
-### ⚠️ Required: Create the Gateway CRD
+### Create the Gateway CRD
 
-**This step is critical and often missed.** Without this Gateway resource, the east-west gateway pods have no listener configured on port 15443 and will reject all incoming traffic.
+The Gateway resource configures the east-west gateway pods to listen on port 15443 for cross-cluster traffic.
 
 ```yaml
 apiVersion: networking.istio.io/v1beta1
@@ -389,11 +387,11 @@ If you see no output, the Gateway CRD is missing or not selecting your gateway p
 
 ## Step 8: Create Egress Proxy Services
 
-**Critical for data plane traffic:** Pods in Kubernetes cannot reach Tailscale CGNAT IPs (100.x.x.x) directly. You must create egress proxy services that route traffic through Tailscale.
+Pods in Kubernetes cannot reach Tailscale CGNAT IPs (100.x.x.x) directly, so you create egress proxy services that route traffic through Tailscale.
 
-### Create a ProxyClass (Recommended)
+### Create a ProxyClass
 
-> **Note:** As of Tailscale operator v1.92.5, there's a known bug where `ProxyGroup` egress proxies don't listen on the configured ports. Use `proxy-class` annotation instead.
+Use the `proxy-class` annotation for egress proxies. This approach works reliably across Tailscale operator versions.
 
 ```yaml
 apiVersion: tailscale.com/v1alpha1
@@ -487,7 +485,7 @@ kubectl get pods -n istio-system -l tailscale.com/parent-resource-type=svc
 
 ## Step 9: Configure Mesh Networks
 
-Update Istio to know about the network topology. **Important:** Use local egress service DNS names, not Tailscale FQDNs directly. This ensures traffic routes through the egress proxy.
+Update Istio to know about the network topology. Use local egress service DNS names (not Tailscale FQDNs directly) so traffic routes through the egress proxy.
 
 **In Cluster 1**, configure `global.meshNetworks` in istiod values:
 ```yaml
@@ -540,7 +538,7 @@ helm upgrade istiod istio/istiod \
   -f cluster2-mesh-networks.yaml
 ```
 
-> **Why local DNS names?** Istio sidecars can't resolve or route to Tailscale FQDNs (100.x.x.x IPs). By pointing to local egress services, traffic flows: `sidecar → egress ClusterIP → Tailscale proxy pod → Tailscale network → remote gateway`.
+Istio sidecars can't resolve or route to Tailscale FQDNs (100.x.x.x IPs) directly. By pointing to local egress services, traffic flows: `sidecar → egress ClusterIP → Tailscale proxy pod → Tailscale network → remote gateway`.
 
 ## Verifying the Setup
 
@@ -640,11 +638,11 @@ This routes 80% of traffic to local endpoints with automatic failover to remote 
 
 ### "no healthy upstream" errors
 
-This is the most common issue and usually indicates one of two problems:
+This typically indicates one of two issues:
 
-**1. Missing Gateway CRD (most common)**
+**1. Missing Gateway CRD**
 
-The east-west gateway pods have no listener without the Gateway resource:
+The east-west gateway pods need the Gateway resource to configure listeners:
 ```bash
 # Check if 15443 listener exists
 istioctl proxy-config listeners deploy/istio-eastwestgateway -n istio-system | grep 15443
@@ -676,9 +674,7 @@ istioctl proxy-config endpoints <pod-name> --cluster "outbound|80||service.names
 
 ### ProxyGroup egress not listening on ports
 
-**Known bug in Tailscale operator v1.92.5:** ProxyGroup-based egress proxies may not listen on the configured ports. 
-
-**Workaround:** Use `proxy-class` annotation instead of ProxyGroup:
+ProxyGroup-based egress proxies may not listen on the configured ports in some operator versions. Use `proxy-class` annotation instead:
 ```yaml
 annotations:
   tailscale.com/proxy-class: common  # Use this
