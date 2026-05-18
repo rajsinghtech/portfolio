@@ -1,0 +1,32 @@
+\documentclass[letter,10pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{TLCresume}
+
+%====================
+% CONTACT INFORMATION
+%====================
+\author{Raj Singh} % Name Here
+\def\phone{(651)605-1493}
+\def\city{Chicago, IL}
+
+\def\email{rajsinghcpre@gmail.com}
+\def\LinkedIn{rajsingh360} % linkedin.com/in/______
+\def\github{rajsinghtech} % github username
+\def\role{Kubernetes Platform Engineer} % JOB TITLE
+\catcode`\$=12
+\begin{document}
+\import{sections/}{_header}
+% \import{sections/}{objective}
+\section{Education}
+\import{sections/}{education}
+
+\section{Skills}
+\import{sections/}{skills}
+
+\section{Technical Experience}
+\import{sections/}{experience}
+
+% make a newpage wherever it is a clean break
+% \newpage
+
+\end{document}

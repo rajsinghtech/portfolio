@@ -45,6 +45,13 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 0
+      - name: Build resume PDF
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: ./resume
+          root_file: resume.tex
+      - name: Copy resume PDF into static assets
+        run: cp resume/resume.pdf static/resume.pdf
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5

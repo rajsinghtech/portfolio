@@ -34,7 +34,7 @@ icon = "brand-linkedin"
 [[social]]
 identifier = "Resume"
 name = "Resume"
-url = "/resume.pdf"
+url = "/resume"
 
 [[social.params]]
 icon = "resume"
