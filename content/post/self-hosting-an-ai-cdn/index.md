@@ -53,9 +53,9 @@ Live manifests are in [keiretsu-labs/kubernetes-manifests](https://github.com/ke
 
 I run three Talos clusters. They are not copies of each other.
 
-- **Ottawa** (`killinit.cc`) - Headquarters. Git, login, Grafana, the agent control plane, the OCI registry. If Ottawa is down the other two keep running, but you cannot log in, ship, or see dashboards.
-- **Robbinsdale** (`lukehouge.com`) - The house. Home Assistant, media, a second Ceph, a second Garage zone.
-- **St. Petersburg** (`rajsingh.info`) - Inference. Two GB10 Sparks run one vLLM group. Ottawa reaches that model over Cilium, not Tailscale.
+- **Ottawa** - Headquarters. Git, login, Grafana, the agent control plane, the OCI registry. If Ottawa is down the other two keep running, but you cannot log in, ship, or see dashboards.
+- **Robbinsdale** - The house. Home Assistant, media, a second Ceph, a second Garage zone.
+- **St. Petersburg** - Inference. Two GB10 Sparks run one vLLM group. Ottawa reaches that model over Cilium, not Tailscale.
 
 ![Three buildings](three-buildings.png)
 
@@ -65,7 +65,7 @@ This is the piece I left out of the last framework post, and it is why the rest 
 
 Each site has a UniFi gateway. The three UDMs are meshed. That is the WAN. Pod CIDRs, service CIDRs, and LoadBalancer ranges only leave a cluster because the UDM already has a path to the other two sites. Cilium does not create that path. Cilium *uses* it.
 
-I wrote the [Cilium + UniFi BGP](/p/cilium-unifi/) walkthrough when this was one cluster talking to one router. Same pattern, three times, plus the mesh between the routers. ClusterMesh API servers sit on pinned LoadBalancer IPs (`10.169.10.20`, `10.50.10.20`, `10.73.10.20`) and peer over that UniFi-routed network. The old Tailscale LoadBalancer, mesh ProxyGroup, and east-west egress Services are gone. ClusterMesh has no Tailscale hop.
+I wrote the [Cilium + UniFi BGP](/p/cilium-unifi/) walkthrough when this was one cluster talking to one router. Same pattern, three times, plus the mesh between the routers. ClusterMesh API servers sit on pinned LoadBalancer IPs and peer over that UniFi-routed network. The old Tailscale LoadBalancer, mesh ProxyGroup, and east-west egress Services are gone. ClusterMesh has no Tailscale hop.
 
 If the UniFi mesh is down, Hubble still looks fine from inside a cluster and DNS still resolves. Nothing connects. Easy to misread as an ingress or cert problem.
 
@@ -77,7 +77,7 @@ The reason for choosing Cilium is the same as last time: it is the superior CNI.
 
 Talos ships `cni: none` and kube-proxy off. Cilium is both. Each site has its own Cilium tree on purpose, cluster IDs 1, 2, and 3.
 
-Cilium peers with UniFi over BGP (`CiliumBGPClusterConfig` named `unifi`) and advertises **PodCIDR, ClusterIP, ExternalIP, and LoadBalancerIP**. All of them. Every pod and every ClusterIP on a site is LAN-routable. ClusterMesh then syncs services and identities so Ottawa can call `qwen38-mesh.ai.svc.clusterset.local` and actually hit the Sparks. MCS exports, local affinity, cross-cluster failover. Inference, Garage RPC, Woodpecker agents, Mimir, logs all ride that.
+Cilium peers with UniFi over BGP and advertises pod, ClusterIP, and LoadBalancer addresses. All of them. Every pod and every ClusterIP on a site is LAN-routable. ClusterMesh then syncs services and identities so Ottawa can call the model in St. Petersburg by service name. MCS exports, local affinity, cross-cluster failover. Inference, Garage RPC, Woodpecker agents, Mimir, logs all ride that.
 
 That is east-west. Direct. Native routing. No overlay tax for the work the company actually does.
 
@@ -87,16 +87,12 @@ One thing to say out loud: because BGP advertises ClusterIPs onto the LAN, and t
 
 ### BGP - local only
 
-Cilium peers with the local UDM. That is enough. The UniFi mesh already moves packets between sites; a second BGP session to the other routers does not add a path. ClusterMesh is services. BGP is "tell my router about my CIDRs."
-
-St. Petersburg Cilium is ASN 64516 so it does not share Ottawa's 64514. The UDM there stays 64515. FRR `remote-as` on that box has to match 64516.
+Cilium peers with the local UDM. That is enough. The UniFi mesh already moves packets between sites; a second BGP session to the other routers does not add a path. ClusterMesh is services. BGP is "tell my router about this cluster's addresses." Each cluster has its own ASN.
 
 LoadBalancers are two spaces:
 
-- **Per-site** `10.169/10.50/10.73` — Tailscale nameserver, PeerRelay, ClusterMesh. Public and private Envoy already share this range; the door is the Gateway, not the CIDR.
-- **Shared** `10.69.0.0/16` (gateway `10.69.0.254`) — keiretsu-wide VIPs, carved `10.69.{site}.0/24`.
-
-Opt in with `lb.keiretsu.top/pool: shared`. The mesh routes 10.69 because it is a UniFi network, same as 10.169.
+- **Per-site** — Tailscale nameserver, PeerRelay, ClusterMesh. Public and private Envoy already share this range; the door is the Gateway, not the subnet.
+- **Shared** — a UniFi network every site can see, carved so each cluster allocates from its own slice. Opt in with a label. The mesh routes it because it is a UniFi network, same as the per-site ranges.
 
 ### VPN - Tailscale
 
@@ -119,7 +115,7 @@ A homelab that only exists on a VPN is a homelab. This has a public path too.
 
 Every cluster gets the same three Gateways from one base:
 
-1. **`public`** - Internet. Cloudflare DNS, Let's Encrypt, the websites a stranger can hit. k8gb load-balances names that actually run in more than one cluster. Names that only exist in Ottawa (`bhaiya`, `forgejo`, `auth`) are pinned there. GSLB with no backend on the other WAN is just a coin flip.
+1. **`public`** - Internet. Cloudflare DNS, Let's Encrypt, the websites a stranger can hit. k8gb load-balances names that actually run in more than one cluster. Names that only exist in Ottawa are pinned there. GSLB with no backend on the other WAN is just a coin flip.
 2. **`private`** - LAN. Same certs, no Cloudflare, fewer listeners.
 3. **`ts`** - Tailnet only. Split DNS. Cluster control and the model API live here.
 
@@ -133,13 +129,13 @@ Once you have a UniFi mesh and Cilium advertising CIDRs onto it, you do not need
 
 **BGP** is the packet, local to the site. Cilium tells that UDM where the pods and ClusterIPs are. The UniFi mesh is how the other sites reach the next-hop. ClusterMesh picks endpoints, with `service.cilium.io/affinity: local` so a request that already landed at a site stays there unless that backend is dead. This is how Ottawa talks to the model, how Garage RPC fans out per node, how Robbinsdale Woodpecker agents reach the Ottawa server. Optimized pathing here means: do not hairpin through Tailscale, do not hairpin through a public Gateway, send the packet on the L3 fabric that already exists.
 
-**DNS** is the name. k8gb for public GSLB (`cdn.keiretsu.top`). UniFi for the private/LAN view. Tailscale split DNS for the `ts` Gateway. k8gb picks a healthy regional Envoy edge. It does not make a single-region app highly available. DNS never did. Pin names that only have one home.
+**DNS** is the name. k8gb for public GSLB. UniFi for the private/LAN view. Tailscale split DNS for the `ts` Gateway. k8gb picks a healthy regional Envoy edge. It does not make a single-region app highly available. DNS never did. Pin names that only have one home.
 
 North-south is DNS then Gateway then, if the backend is exported, MCS. East-west skips DNS and goes ClusterMesh on BGP. Mixing those up is how you get a 404 that looks like a network outage, or a network outage that looks like a cert problem.
 
 ![Steering](steering.png)
 
-The future I actually care about is **distributed scheduling on this fabric**. If every pod CIDR is reachable, you can put the work where the GPU is, where the data is, or where the user is, and the path is already there. Steer the client with DNS. Steer the packet with BGP. Schedule the pod on the site that makes both of those cheap. That is path-aware scheduling without inventing a new control plane. Cilium already sees the endpoints. k8gb already sees the edges. The missing piece is treating "which cluster should this agent run on" as a routing decision, not a YAML copy-paste.
+The future I actually care about is **distributed scheduling on this fabric**. If every pod is reachable, you can put the work where the GPU is, where the data is, or where the user is, and the path is already there. Steer the client with DNS. Steer the packet with BGP. Schedule the pod on the site that makes both of those cheap. That is path-aware scheduling without inventing a new control plane. Cilium already sees the endpoints. k8gb already sees the edges. The missing piece is treating "which cluster should this agent run on" as a routing decision, not a YAML copy-paste.
 
 I am not running that scheduler yet. The fabric is what makes it possible. Inference already works this way by accident: the model lives in St. Petersburg, the front door lives in Ottawa, ClusterMesh is the path. Agents still mostly land in Ottawa because that is where the workspace control plane is. The next step is obvious once you look at it as steering.
 
