@@ -1,6 +1,6 @@
 ---
 title: Self-Hosting an AI CDN
-description: How I run three Talos clusters on a UniFi mesh with Cilium ClusterMesh, Tailscale, Flux, and sandboxed coding agents
+description: How I run three Talos clusters on a UniFi mesh with Cilium ClusterMesh, garage-operator, Tailscale, Flux, and sandboxed coding agents
 slug: self-hosting-an-ai-cdn
 date: 2026-09-18 00:00:00+0000
 image: cover.png
@@ -17,6 +17,7 @@ tags:
     - gitops
     - sandboxing
     - cdn
+    - garage
     - networking
 weight: 1
 draft: false
@@ -24,7 +25,9 @@ draft: false
 
 A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). That post was RKE2, Argo CD, and Tailscale as the way clusters talked to each other. The stack has changed a lot since then.
 
-I still run this at home. The difference is I now treat it like a company: git is the source of truth, Flux ships the change, UniFi is the site-to-site mesh, Cilium BGP and ClusterMesh do east-west over that mesh, Tailscale is how I log in, and coding agents do a lot of the walking. I call the shape an AI CDN because the job looks like a CDN. Put the right thing at the right edge, behind the right door. The "thing" used to be a file. Now it is a model, a git commit, or an agent session that is allowed to open a pull request.
+I still run this at home. The difference is I now treat it like a company: git is the source of truth, Flux ships the change, UniFi is the site-to-site mesh, Cilium BGP and ClusterMesh do east-west over that mesh, Tailscale is how I log in, garage-operator is distributed S3 across the three sites, and coding agents do a lot of the walking. I call the shape an AI CDN because the job looks like a CDN. Put the right thing at the right edge, behind the right door. The "thing" used to be a file. Now it is a model, a git commit, or an agent session that is allowed to open a pull request.
+
+You do not get a CDN without an origin that is already in more than one city. That origin is Garage.
 
 Steering is the other half. Once the fabric is a real L3 mesh, you have two knobs: BGP for the packet, DNS for the name. That is what makes distributed scheduling worth talking about.
 
@@ -44,7 +47,7 @@ Live manifests are in [keiretsu-labs/kubernetes-manifests](https://github.com/ke
 - **Flux** - GitOps. `main` is the only durable state. If it is not in git, it does not last.
 - **Envoy Gateway** - Three Gateways per cluster: `public`, `private`, `ts`.
 - **Cloudflare + k8gb** - Public DNS and GSLB for names that actually run in more than one place.
-- **Garage** - S3 across all three sites. One zone down is fine. Two is an outage.
+- **garage-operator** - Distributed S3. One GarageCluster per site, one logical estate. Replication 3. Apps talk to a local gateway.
 - **Forgejo + Woodpecker** - Git and CI, self-hosted.
 - **vLLM** - Local model on two DGX Sparks in St. Petersburg.
 - **Kata Containers** - Each agent session gets its own VM. gVisor is the cheaper fence.
@@ -93,6 +96,20 @@ LoadBalancers are two spaces:
 
 - **Per-site** — Tailscale nameserver, PeerRelay, ClusterMesh. Public and private Envoy already share this range; the door is the Gateway, not the subnet.
 - **Shared** — a UniFi network every site can see, carved so each cluster allocates from its own slice. Opt in with a label. The mesh routes it because it is a UniFi network, same as the per-site ranges.
+
+### Object store - garage-operator
+
+This is the piece that makes the rest of it a CDN instead of three homelabs with a VPN.
+
+garage-operator runs in every cluster. The CRs are the API: `GarageCluster`, `GarageNode`, `GarageBucket`, `GarageKey`. Flux owns those objects. I do not `garage` CLI a layout by hand and hope the other two sites agree.
+
+One `GarageCluster` per site, zone named after the location. Together they are **one S3 estate**, replication factor 3, degraded reads if a zone is unhappy. Ottawa, Robbinsdale, and St. Petersburg each hold a copy. One site down is fine. Two is an outage of the object store.
+
+RPC between zones rides ClusterMesh, not Tailscale. Same hallway as the model. Apps never talk to a disk or a remote zone. They use the **local gateway**. The gateway has the key table, so S3 signatures verify on-site, and if local storage is gone it still reads from a surviving zone.
+
+Postgres WAL, OCI blobs, backups, Loki-era leftovers, agent artifacts — that is what the factory actually stores. Without this, Flux can ship YAML and the GPUs can sit there, but there is no object that exists in more than one city.
+
+![Distributed S3](garage.png)
 
 ### VPN - Tailscale
 
@@ -167,7 +184,7 @@ That is the factory. Agents write. Checks run. I merge. I am not trying to remov
 
 ### Storage and the rest
 
-Garage is the object store, three zones. Rook-Ceph is block at Ottawa and Robbinsdale. St. Petersburg is local-path, so a Spark dying is data loss for anything that only lived there. CNPG for Postgres, WAL to Garage. Spegel so nodes share image layers. Zot for OCI, blobs in Garage.
+Rook-Ceph is block at Ottawa and Robbinsdale. St. Petersburg is local-path, so a Spark dying is data loss for anything that only lived there. CNPG for Postgres, WAL to Garage. Spegel so nodes share image layers. Zot for OCI, blobs in Garage.
 
 The unglamorous list is the company: cert-manager, DNS-01, encrypted secrets, upgrades that do not take all three sites down at once.
 
@@ -185,6 +202,6 @@ I picked those numbers. If you rent the factory, the sandbox, or the GPUs, someo
 
 You can rent a coding agent, a GPU, and a sandbox. All three got good. What you cannot rent is a written copy of how *your* setup actually works, plus a network that turns a change in git into a running object at the right Gateway, as the right identity.
 
-UniFi is the mesh. Cilium BGP and ClusterMesh are east-west on top of it. DNS and BGP are the two steering knobs. Tailscale is how someone proves they belong. Public ingress is how this meets the internet without putting the model on it. Flux ships git. Kata keeps the agents in a VM.
+UniFi is the mesh. Cilium BGP and ClusterMesh are east-west on top of it. garage-operator is the origin: S3 in all three cities. DNS and BGP are the two steering knobs. Tailscale is how someone proves they belong. Public ingress is how this meets the internet without putting the model on it. Flux ships git. Kata keeps the agents in a VM.
 
 The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the runbook. This post is the current shape of a framework I started writing down in 2024.
