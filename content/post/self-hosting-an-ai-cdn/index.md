@@ -57,7 +57,7 @@ I run three Talos clusters. They are not copies of each other.
 - **Robbinsdale** - The house. Home Assistant, media, a second Ceph, a second Garage zone.
 - **St. Petersburg** - Inference. Two GB10 Sparks run one vLLM group. Ottawa reaches that model over Cilium, not Tailscale.
 
-![Three buildings](three-buildings.png)
+![Ottawa, Robbinsdale, and St. Petersburg](sites.png)
 
 ### Underlay - UniFi
 
