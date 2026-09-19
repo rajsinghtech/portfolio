@@ -1,0 +1,32 @@
+digraph roads {
+  graph [
+    rankdir=TB, splines=spline, bgcolor="#ffffff",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.5, ranksep=0.6
+  ];
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
+        fillcolor="#ffffff", color="#8c959f", margin="0.22,0.14"];
+  edge [fontname="Helvetica", fontsize=10, color="#57606a", arrowsize=0.7];
+
+  you [
+    label="you\nlaptop  ·  phone",
+    fillcolor="#fff1e5", color="#bc4c00", penwidth=1.6
+  ];
+  ts [
+    label="Tailscale  ·  the badge\nproves who you are",
+    fillcolor="#ddf4ff", color="#0969da", penwidth=1.6
+  ];
+
+  subgraph cluster_roads {
+    label="Cilium  ·  the roads";
+    style="rounded,filled"; fillcolor="#f0fff4"; color="#1a7f37"; fontsize=13;
+    ot [label="Ottawa\nheadquarters"];
+    rb [label="Robbinsdale\nthe house"];
+    sp [label="St. Petersburg\nthe brain"];
+    ot -> rb [dir=both];
+    ot -> sp [dir=both];
+    rb -> sp [dir=both];
+  }
+
+  you -> ts [label="log in"];
+  ts -> ot [label="open a door"];
+}

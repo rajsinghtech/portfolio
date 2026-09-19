@@ -1,0 +1,28 @@
+digraph steering {
+  graph [
+    rankdir=LR, splines=spline, bgcolor="#ffffff",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.45, ranksep=0.7
+  ];
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
+        fillcolor="#ffffff", color="#8c959f", margin="0.22,0.14"];
+  edge [fontname="Helvetica", fontsize=10, color="#57606a", arrowsize=0.7];
+
+  client [label="client", fillcolor="#fff1e5", color="#bc4c00"];
+
+  dns [
+    label="DNS steering\nk8gb  ·  UniFi  ·  Cloudflare\npick a site",
+    fillcolor="#ddf4ff", color="#0969da"
+  ];
+  bgp [
+    label="BGP steering\nCilium advertises CIDRs\npick a path",
+    fillcolor="#f0fff4", color="#1a7f37"
+  ];
+  work [
+    label="the workload\nschedule it where the\npath already is",
+    fillcolor="#ffffff", color="#24292f", penwidth=1.6
+  ];
+
+  client -> dns;
+  dns -> bgp;
+  bgp -> work;
+}

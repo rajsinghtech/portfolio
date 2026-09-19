@@ -1,0 +1,25 @@
+digraph buildings {
+  graph [
+    rankdir=LR, splines=spline, bgcolor="#ffffff",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.45, ranksep=0.7
+  ];
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
+        fillcolor="#ffffff", color="#8c959f", margin="0.22,0.14"];
+  edge [fontname="Helvetica", fontsize=10, color="#57606a", arrowsize=0.7];
+
+  ottawa [
+    label="Ottawa\nheadquarters\n\ngit  ·  login  ·  agents",
+    fillcolor="#ddf4ff", color="#0969da", penwidth=1.6
+  ];
+  robbinsdale [
+    label="Robbinsdale\nthe house\n\nlights  ·  media  ·  files",
+    fillcolor="#fff1e5", color="#bc4c00", penwidth=1.6
+  ];
+  stpete [
+    label="St. Petersburg\nthe brain\n\nlocal model on GPUs",
+    fillcolor="#f0fff4", color="#1a7f37", penwidth=1.6
+  ];
+
+  ottawa -> robbinsdale [label="private roads", dir=both];
+  ottawa -> stpete [label="private roads", dir=both];
+}

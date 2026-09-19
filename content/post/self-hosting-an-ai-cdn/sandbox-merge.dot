@@ -1,0 +1,35 @@
+digraph factory {
+  graph [
+    rankdir=LR, splines=spline, bgcolor="#ffffff",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.45, ranksep=0.7
+  ];
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
+        fillcolor="#ffffff", color="#8c959f", margin="0.22,0.14"];
+  edge [fontname="Helvetica", fontsize=10, color="#57606a", arrowsize=0.7];
+
+  agent [
+    label="agent\nwrites and runs code",
+    fillcolor="#fff1e5", color="#bc4c00"
+  ];
+  office [
+    label="throwaway office\nits own tiny VM\nfire is contained",
+    fillcolor="#ddf4ff", color="#0969da"
+  ];
+  git [
+    label="git\nthe written company",
+    fillcolor="#ffffff", color="#24292f", penwidth=1.6
+  ];
+  human [
+    label="you\naccept the commit",
+    fillcolor="#fff1e5", color="#bc4c00"
+  ];
+  prod [
+    label="production\nonly after the merge",
+    fillcolor="#f0fff4", color="#1a7f37"
+  ];
+
+  agent -> office [label="works here"];
+  office -> git [label="opens a change"];
+  git -> human [label="review"];
+  human -> prod [label="merge"];
+}
