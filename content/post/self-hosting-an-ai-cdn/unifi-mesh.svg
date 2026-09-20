@@ -8,7 +8,6 @@
  viewBox="0.00 0.00 860.00 354.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(20.16 334.16)">
 <title>unifi</title>
-<polygon fill="#1c1c1c" stroke="none" points="-20.16,20.16 -20.16,-334.16 839.36,-334.16 839.36,20.16 -20.16,20.16"/>
 <g id="clust1" class="cluster">
 <title>cluster_unifi</title>
 <path fill="#222222" stroke="#5dba5d" d="M20,-164C20,-164 579.9,-164 579.9,-164 585.9,-164 591.9,-170 591.9,-176 591.9,-176 591.9,-294 591.9,-294 591.9,-300 585.9,-306 579.9,-306 579.9,-306 20,-306 20,-306 14,-306 8,-300 8,-294 8,-294 8,-176 8,-176 8,-170 14,-164 20,-164"/>

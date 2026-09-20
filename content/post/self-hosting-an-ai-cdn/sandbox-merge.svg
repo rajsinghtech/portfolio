@@ -8,7 +8,6 @@
  viewBox="0.00 0.00 1078.00 99.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(20.16 78.57)">
 <title>factory</title>
-<polygon fill="#1c1c1c" stroke="none" points="-20.16,20.16 -20.16,-78.57 1058.06,-78.57 1058.06,20.16 -20.16,20.16"/>
 <!-- agent -->
 <g id="node1" class="node">
 <title>agent</title>

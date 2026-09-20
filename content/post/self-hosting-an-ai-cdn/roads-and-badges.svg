@@ -8,7 +8,6 @@
  viewBox="0.00 0.00 210.00 501.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(20.16 480.46)">
 <title>roads</title>
-<polygon fill="#1c1c1c" stroke="none" points="-20.16,20.16 -20.16,-480.46 190.16,-480.46 190.16,20.16 -20.16,20.16"/>
 <g id="clust1" class="cluster">
 <title>cluster_roads</title>
 <path fill="#222222" stroke="#5dba5d" d="M20,-8C20,-8 150,-8 150,-8 156,-8 162,-14 162,-20 162,-20 162,-260.48 162,-260.48 162,-266.48 156,-272.48 150,-272.48 150,-272.48 20,-272.48 20,-272.48 14,-272.48 8,-266.48 8,-260.48 8,-260.48 8,-20 8,-20 8,-14 14,-8 20,-8"/>

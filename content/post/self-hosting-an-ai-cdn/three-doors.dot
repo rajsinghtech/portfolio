@@ -1,6 +1,6 @@
 digraph doors {
   graph [
-    rankdir=LR, splines=spline, bgcolor="#1c1c1c",
+    rankdir=LR, splines=spline, bgcolor="transparent",
     fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.4, ranksep=0.8,
     fontcolor="#e8e8e8"
   ];

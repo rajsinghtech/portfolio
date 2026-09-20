@@ -1,6 +1,6 @@
 ---
 title: Self-Hosting an AI CDN
-description: How I run three Talos clusters on a UniFi mesh with Cilium ClusterMesh, garage-operator, Tailscale, Flux, and sandboxed coding agents
+description: Three Talos sites, a UniFi mesh, garage-operator, and sandboxed agents — a company that happens to run at home
 slug: self-hosting-an-ai-cdn
 date: 2026-09-18 00:00:00+0000
 image: cover.png
@@ -23,203 +23,104 @@ weight: 1
 draft: false
 ---
 
-A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). That post was RKE2, Argo CD, and Tailscale as the way clusters talked to each other. The stack has changed a lot since then.
+A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). RKE2, Argo CD, Tailscale as the way clusters talked. That post was a lab.
 
-I still run this at home. The difference is I now treat it like a company: git is the source of truth, Flux ships the change, UniFi is the site-to-site mesh, Cilium BGP and ClusterMesh do east-west over that mesh, Tailscale is how I log in, garage-operator is distributed S3 across the three sites, and coding agents do a lot of the walking. I call the shape an AI CDN because the job looks like a CDN. Put the right thing at the right edge, behind the right door. The "thing" used to be a file. Now it is a model, a git commit, or an agent session that is allowed to open a pull request.
+This is the same machines, grown up. Git is the source of truth. Flux ships it. UniFi is the WAN. Cilium is east-west. Agents write a lot of the diffs. I still merge. I call the shape an **AI CDN** because the job is the same as a CDN: put the right thing at the right edge, behind the right door. The thing used to be a file. Now it is a model, a commit, or an agent session that is allowed to open a pull request.
 
-You do not get a CDN without an origin that is already in more than one city. That origin is Garage.
+You do not get that without an origin that already lives in more than one city. I did not find an operator that made Garage a GitOps object across three Kubernetes clusters, so I [wrote one](https://github.com/rajsinghtech/garage-operator). We still maintain it. That is the object store this whole thing sits on.
 
-Steering is the other half. Once the fabric is a real L3 mesh, you have two knobs: BGP for the packet, DNS for the name. That is what makes distributed scheduling worth talking about.
+Live manifests: [keiretsu-labs/kubernetes-manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
 
-Live manifests are in [keiretsu-labs/kubernetes-manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
+## Three sites
 
-## Helpful Links
-- [Kubernetes Manifests](https://github.com/keiretsu-labs/kubernetes-manifests) - GitOps repo for all three clusters
-- [Cilium + UniFi BGP](/p/cilium-unifi/) - how pod and service CIDRs hit the LAN
-- [Tailscale Operator](/p/tailscale-operator/) - API server proxy, egress, connectors
-- [Gateway API + custom domains](/p/byo-domain-gateway-api-tailscale-operator/) - HTTPRoutes on the tailnet
+They are departments, not replicas.
 
-## Components
-- **Talos** - Immutable Kubernetes OS. No SSH on the nodes. I used to run RKE2. Talos is better for this.
-- **UniFi** - Site-to-site mesh. The underlay. Without this, Cilium has nothing to advertise onto.
-- **Cilium** - CNI, BGP into UniFi, ClusterMesh for east-west. Direct routing, no Tailscale hop. Hubble is Wireshark for the mesh.
-- **Tailscale Operator** - Identity. `kubectl` over the tailnet, grants, sandbox TUN. Not the backbone.
-- **Flux** - GitOps. `main` is the only durable state. If it is not in git, it does not last.
-- **Envoy Gateway** - Three Gateways per cluster: `public`, `private`, `ts`.
-- **Cloudflare + k8gb** - Public DNS and GSLB for names that actually run in more than one place.
-- **garage-operator** - Distributed S3. One GarageCluster per site, one logical estate. Replication 3. Apps talk to a local gateway.
-- **CloudNativePG** - Postgres. WAL and base backups land in Garage.
-- **Kopiur** - Volume snapshots and restore. Proof is a restore into a new PVC, not a green schedule.
-- **Forgejo + Woodpecker** - Git and CI, self-hosted.
-- **vLLM** - Local model on two DGX Sparks in St. Petersburg.
-- **Kata Containers** - Each agent session gets its own VM. gVisor is the cheaper fence.
+**Ottawa** is headquarters. Git, login, Grafana, the workspace control plane, the registry. If Ottawa is down the other two keep their pods. You just cannot log in, ship, or see.
 
-### The three clusters
+**Robbinsdale** is the house. Home Assistant, media, a second Ceph, a second Garage zone.
 
-I run three Talos clusters. They are not copies of each other.
-
-- **Ottawa** - Headquarters. Git, login, Grafana, the agent control plane, the OCI registry. If Ottawa is down the other two keep running, but you cannot log in, ship, or see dashboards.
-- **Robbinsdale** - The house. Home Assistant, media, a second Ceph, a second Garage zone.
-- **St. Petersburg** - Inference. Two GB10 Sparks run one vLLM group. Ottawa reaches that model over Cilium, not Tailscale.
+**St. Petersburg** is inference. Two GB10 Sparks, one vLLM group. Ottawa talks to that model over Cilium, not Tailscale.
 
 ![Ottawa, Robbinsdale, and St. Petersburg](sites.png)
 
-### Underlay - UniFi
+## The fabric
 
-This is the piece I left out of the last framework post, and it is why the rest of the networking even works.
+Each site has a UniFi gateway. The three UDMs are meshed. That is the WAN. Cilium does not create the path. Cilium *uses* it.
 
-Each site has a UniFi gateway. The three UDMs are meshed. That is the WAN. Pod CIDRs, service CIDRs, and LoadBalancer ranges only leave a cluster because the UDM already has a path to the other two sites. Cilium does not create that path. Cilium *uses* it.
+Cilium is the CNI, kube-proxy off, BGP into the local UDM. It advertises pod, ClusterIP, and LoadBalancer addresses. ClusterMesh is how Ottawa calls the model in St. Petersburg by service name. Inference, Garage RPC, CI agents, metrics, logs all ride that hallway. Hubble is Wireshark for it.
 
-I wrote the [Cilium + UniFi BGP](/p/cilium-unifi/) walkthrough when this was one cluster talking to one router. Same pattern, three times, plus the mesh between the routers. ClusterMesh API servers sit on pinned LoadBalancer IPs and peer over that UniFi-routed network. The old Tailscale LoadBalancer, mesh ProxyGroup, and east-west egress Services are gone. ClusterMesh has no Tailscale hop.
+Cilium peers with the **local** router only. The mesh already moves packets between sites. A second BGP session to the other UDMs does not add a path. ClusterMesh is services. BGP is "tell my router about this cluster."
 
-If the UniFi mesh is down, Hubble still looks fine from inside a cluster and DNS still resolves. Nothing connects. Easy to misread as an ingress or cert problem.
+![UniFi mesh](unifi-mesh.svg)
 
-![UniFi mesh](unifi-mesh.png)
+Tailscale is the badge, not the road. The operator's API proxy is how `kubectl` works. The kubeconfig in git has no real credentials. Grants are the org chart, and they have tests. I use Tailscale for laptops, phones, cluster API, and a workspace that needs to join the tailnet from *inside* its sandbox. I do not use it as the path between Ottawa and St. Petersburg. Most Kubernetes-plus-Tailscale writeups, including [my own](/p/tailscale-operator/), treat Tailscale as the interconnect. For three sites that is the slow way.
 
-### CNI - Cilium
+"It is only a ClusterIP" is not a lock. BGP puts those addresses on the LAN, and the subnet router puts them on the tailnet. Use a Gateway policy, a Cilium policy, or a grant.
 
-The reason for choosing Cilium is the same as last time: it is the superior CNI. What changed is I stopped using Tailscale as the path *between* clusters, because UniFi plus BGP made direct routing possible.
+## The origin
 
-Talos ships `cni: none` and kube-proxy off. Cilium is both. Each site has its own Cilium tree on purpose, cluster IDs 1, 2, and 3.
+A CDN without a multi-city origin is a website with extra YAML. Garage is that origin. **garage-operator** is how it gets there.
 
-Cilium peers with UniFi over BGP and advertises pod, ClusterIP, and LoadBalancer addresses. All of them. Every pod and every ClusterIP on a site is LAN-routable. ClusterMesh then syncs services and identities so Ottawa can call the model in St. Petersburg by service name. MCS exports, local affinity, cross-cluster failover. Inference, Garage RPC, Woodpecker agents, Mimir, logs all ride that.
+Off the shelf, Garage is a binary and a layout you edit by hand. That does not survive three clusters, Flux, and agents that open pull requests. So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator): `GarageCluster`, `GarageNode`, `GarageBucket`, `GarageKey`. Flux owns those objects. We still maintain the operator because this estate is the reason it exists — multi-cluster federation, node-local disks, a gateway tier that keeps its identity, buckets as CRs.
 
-That is east-west. Direct. Native routing. No overlay tax for the work the company actually does.
+One cluster CR per site. Together they are one S3 estate, replication 3. One site down is fine. Two is an outage of the object store. RPC rides ClusterMesh, same hallway as the model. Apps never talk to a disk. They talk to the **local gateway**. Signatures verify on-site. If local storage is gone, the gateway still reads from a surviving zone.
 
-Hubble is still the best debugging tool I have for this. If a packet should not leave a namespace, NetworkPolicy is the lock. Cilium can match on DNS names, which matters once you let an agent make outbound calls.
+Postgres WAL, OCI blobs, volume snapshots, agent artifacts — that is what the factory actually stores.
 
-One thing to say out loud: because BGP advertises ClusterIPs onto the LAN, and the Tailscale subnet router advertises the same ranges, "it is only a ClusterIP" is not security. Use a Gateway policy, a Cilium policy, or a Tailscale grant.
+![Distributed S3](garage.svg)
 
-### BGP - local only
+## Three doors
 
-Cilium peers with the local UDM. That is enough. The UniFi mesh already moves packets between sites; a second BGP session to the other routers does not add a path. ClusterMesh is services. BGP is "tell my router about this cluster's addresses." Each cluster has its own ASN.
+A homelab that only exists on a VPN is a clubhouse. This has a street.
 
-LoadBalancers are two spaces:
+Every cluster gets the same three Gateways:
 
-- **Per-site** — Tailscale nameserver, PeerRelay, ClusterMesh. Public and private Envoy already share this range; the door is the Gateway, not the subnet.
-- **Shared** — a UniFi network every site can see, carved so each cluster allocates from its own slice. Opt in with a label. The mesh routes it because it is a UniFi network, same as the per-site ranges.
+1. **`public`** — internet. Cloudflare, Let's Encrypt, k8gb for names that actually run in more than one place. Names that only exist in Ottawa stay pinned there. GSLB with no backend is a coin flip.
+2. **`private`** — the LAN. Same certs, fewer listeners.
+3. **`ts`** — tailnet. Cluster control and the model API.
 
-### Object store - garage-operator
+The model *settings* page can be public, behind login. The model *API* is not. Path and hostname both have to be wrong for a prompt to hit the internet. The door is the Gateway, not the subnet.
 
-This is the piece that makes the rest of it a CDN instead of three homelabs with a VPN.
+![Three doors](three-doors.svg)
 
-garage-operator runs in every cluster. The CRs are the API: `GarageCluster`, `GarageNode`, `GarageBucket`, `GarageKey`. Flux owns those objects. I do not `garage` CLI a layout by hand and hope the other two sites agree.
+North-south is DNS, then Gateway, then maybe a cross-cluster service. East-west skips DNS and goes ClusterMesh. Mixing those up is how you get a 404 that looks like a network outage, or a network outage that looks like a cert problem.
 
-One `GarageCluster` per site, zone named after the location. Together they are **one S3 estate**, replication factor 3, degraded reads if a zone is unhappy. Ottawa, Robbinsdale, and St. Petersburg each hold a copy. One site down is fine. Two is an outage of the object store.
+Steer the client with DNS. Steer the packet with BGP. The thing I have not built yet is treating "which cluster should this agent run on" as the same kind of decision. The model already works that way: brain in St. Petersburg, front door in Ottawa, ClusterMesh in between.
 
-RPC between zones rides ClusterMesh, not Tailscale. Same hallway as the model. Apps never talk to a disk or a remote zone. They use the **local gateway**. The gateway has the key table, so S3 signatures verify on-site, and if local storage is gone it still reads from a surviving zone.
+## Agents
 
-Postgres WAL, OCI blobs, backups, Loki-era leftovers, agent artifacts — that is what the factory actually stores. Without this, Flux can ship YAML and the GPUs can sit there, but there is no object that exists in more than one city.
+Coding agents execute whatever they just wrote. Default containers share the host kernel. Fine for Flux. Not fine for a workspace.
 
-![Distributed S3](garage.png)
+Every user session is Kata: a small VM, its own kernel. Trash the room, the room dies. A separate RuntimeClass is the only one allowed to open a TUN and run Tailscale inside the sandbox. If every sandbox is a VPN node, you did not sandbox anything. Locks go on the thing being protected. Once traffic is on Tailscale, source policy cannot always see the final destination.
 
-### VPN - Tailscale
+This summer, Cursor, Codex, and Gemini CLI did not need to break out. The agent wrote a file and a trusted program on the laptop ran it later. The hole was the handshake. Mine is a merge. The agent can wreck its VM. Production changes when I accept a commit.
 
-Tailscale is how a person (or an agent) proves who they are. The operator's API server proxy is how `kubectl` works. The kubeconfig in git has no real credentials. Tailnet identity is the credential. Grants map to Kubernetes groups. The ACL file is the org chart, and it has tests in CI.
+![Agent, office, merge](sandbox-merge.svg)
 
-I use Tailscale for:
+The factory around that: a pointer file means an app is deployed. No pointer, not deployed. Agents read the repo. Local gates render all three clusters. GitHub Actions does it again. Merge to `main`. Flux is the only writer. I used to run Argo CD. I am not trying to fire myself. I am trying to make the floor small enough that I can still walk it.
 
-- Cluster API access
-- Laptops and phones
-- A workspace that needs to join the tailnet from inside its sandbox
-- Names that actually need tailnet identity, via an ExternalName Service
+## Databases and disks
 
-I do **not** use it as the road between Ottawa and St. Petersburg. That traffic should feel like a hallway. Most Kubernetes + Tailscale writeups (including [my own operator post](/p/tailscale-operator/)) treat Tailscale as the interconnect. That works. For a three-site setup it is the slow way.
+Postgres is CloudNativePG. A cluster CR per database. WAL and base backups go to Garage — that is why the operator exists. Restore is from object storage, not a tarball on a laptop.
 
-![Roads and badges](roads-and-badges.png)
+YAML in git is not a backup of a PVC. Kopiur snapshots the volume, keeps it in Garage, restores into a **new** PVC. A schedule that never produced a snapshot is not a backup. A restore you have not run is not a restore. Ottawa and Robbinsdale snapshot Ceph. St. Petersburg is mostly local-path; Home Assistant is the one that has to work.
 
-### Ingress - three Gateways
-
-A homelab that only exists on a VPN is a homelab. This has a public path too.
-
-Every cluster gets the same three Gateways from one base:
-
-1. **`public`** - Internet. Cloudflare DNS, Let's Encrypt, the websites a stranger can hit. k8gb load-balances names that actually run in more than one cluster. Names that only exist in Ottawa are pinned there. GSLB with no backend on the other WAN is just a coin flip.
-2. **`private`** - LAN. Same certs, no Cloudflare, fewer listeners.
-3. **`ts`** - Tailnet only. Split DNS. Cluster control and the model API live here.
-
-![Three doors](three-doors.png)
-
-The AI-specific split: the model *settings* page can be public, behind login. The model *API* is private/tailnet only. Path and hostname both have to be wrong for a prompt to hit the internet.
-
-### Steering - BGP or DNS
-
-Once you have a UniFi mesh and Cilium advertising CIDRs onto it, you do not need a service mesh sidecar to pick a path. You have two steering planes, and they do different jobs.
-
-**BGP** is the packet, local to the site. Cilium tells that UDM where the pods and ClusterIPs are. The UniFi mesh is how the other sites reach the next-hop. ClusterMesh picks endpoints, with `service.cilium.io/affinity: local` so a request that already landed at a site stays there unless that backend is dead. This is how Ottawa talks to the model, how Garage RPC fans out per node, how Robbinsdale Woodpecker agents reach the Ottawa server. Optimized pathing here means: do not hairpin through Tailscale, do not hairpin through a public Gateway, send the packet on the L3 fabric that already exists.
-
-**DNS** is the name. k8gb for public GSLB. UniFi for the private/LAN view. Tailscale split DNS for the `ts` Gateway. k8gb picks a healthy regional Envoy edge. It does not make a single-region app highly available. DNS never did. Pin names that only have one home.
-
-North-south is DNS then Gateway then, if the backend is exported, MCS. East-west skips DNS and goes ClusterMesh on BGP. Mixing those up is how you get a 404 that looks like a network outage, or a network outage that looks like a cert problem.
-
-![Steering](steering.png)
-
-The future I actually care about is **distributed scheduling on this fabric**. If every pod is reachable, you can put the work where the GPU is, where the data is, or where the user is, and the path is already there. Steer the client with DNS. Steer the packet with BGP. Schedule the pod on the site that makes both of those cheap. That is path-aware scheduling without inventing a new control plane. Cilium already sees the endpoints. k8gb already sees the edges. The missing piece is treating "which cluster should this agent run on" as a routing decision, not a YAML copy-paste.
-
-I am not running that scheduler yet. The fabric is what makes it possible. Inference already works this way by accident: the model lives in St. Petersburg, the front door lives in Ottawa, ClusterMesh is the path. Agents still mostly land in Ottawa because that is where the workspace control plane is. The next step is obvious once you look at it as steering.
-
-### Inference - vLLM on the Sparks
-
-St. Petersburg serves one model across both Sparks. There is a single endpoint. I do not put a fancy inference router in front of one endpoint. That is a hop and a failure domain for nothing.
-
-Ottawa apps talk to it over ClusterMesh. CLIProxy on Ottawa is the front door clients see. If the Sparks are down, it can fail over to a rented model. The GPU is not the public hostname.
-
-### Sandboxing - Kata
-
-Coding agents execute whatever they just wrote. Default containers share the host kernel. That is fine for Flux. It is not fine for a workspace.
-
-Every user workspace runs in Kata: a small VM, its own kernel. Trash the room, the room dies. A separate RuntimeClass is the only one allowed to open a TUN and run Tailscale *inside* the sandbox. Ordinary workspaces do not get that. If every sandbox is a VPN node, you did not sandbox anything.
-
-Network policy is the other half. Locks go on the thing being protected, not only on the agent. Once traffic is on Tailscale, source policy cannot always see the final destination.
-
-This summer researchers showed Cursor, Codex, and Gemini CLI did not need to "break out" of their sandboxes. The agent wrote a file and a trusted program on the laptop ran it later. The hole was the handshake. Mine is a merge. The agent can wreck its VM. Production changes when I accept a commit.
-
-![Agent, office, merge](sandbox-merge.png)
-
-### GitOps - Flux
-
-I used to run Argo CD. Flux is what ships this repo. A pointer file in `kubernetes/apps/<cluster>/...` is the deploy decision. No pointer, not deployed. Inventory is generated from those files so the catalog cannot lie.
-
-Agents read the repo. Local gates render all three clusters before commit. GitHub Actions does it again. Merge to `main`. Flux is the only writer. Secrets are SOPS. There is no `kubectl apply` that lasts.
-
-That is the factory. Agents write. Checks run. I merge. I am not trying to remove myself from the loop. I am trying to make the loop small enough that I can still walk it.
-
-### Databases - CloudNativePG
-
-Postgres is CloudNativePG, not a pet VM. A `Cluster` CR per database, two instances where it matters. Git, CI, photos, the apps the factory actually runs — they get a database the same way they get a Gateway: a file in the repo.
-
-WAL and base backups go to Garage. That is the point of distributed S3 as the origin. A disk dying in Ottawa does not mean the database catalog died with it. Restore is from object storage, not from a laptop tarball.
-
-![Databases](databases.png)
-
-### Volume backup and restore - Kopiur
-
-YAML in git is not a backup of a PVC. Kopiur is the volume plane: snapshot the disk, keep the snapshot in Garage, restore into a **new** PVC. A schedule that never produced a snapshot is not a backup. A restore you have not run is not a restore.
-
-Ottawa and Robbinsdale snapshot Ceph-backed volumes. St. Petersburg has less of that — local-path on the Sparks is a different boundary, and Home Assistant is the one that has to work. Retention is daily / weekly / monthly. I do not keep a second backup product next to it.
-
-![Volume backup](backups.png)
-
-### Storage and the rest
-
-Rook-Ceph is block at Ottawa and Robbinsdale. St. Petersburg is local-path, so a Spark dying is data loss for anything that only lived there and was not snapshotted. Spegel so nodes share image layers. Zot for OCI, blobs in Garage.
-
-The unglamorous list is the company: cert-manager, DNS-01, encrypted secrets, upgrades that do not take all three sites down at once.
+Rook-Ceph is block at Ottawa and Robbinsdale. A Spark dying is data loss for anything that only lived there and was not snapshotted.
 
 ## What breaks
 
-**Ottawa down:** auth, git, CI, Grafana. Other sites keep their pods. You just cannot see them or ship.
+**Ottawa down:** auth, git, CI, Grafana. Other sites keep running. You cannot see them or ship.
 
-**St. Petersburg down:** local inference dies. The factory still merges. Clients fail over through CLIProxy.
+**St. Petersburg down:** local inference dies. The factory still merges. Clients fail over through the front door.
 
 **Robbinsdale down:** the house and one Garage/Ceph zone. Ottawa still answers.
 
 I picked those numbers. If you rent the factory, the sandbox, or the GPUs, someone else did.
 
-## Wrapping up
+## The point
 
-You can rent a coding agent, a GPU, and a sandbox. All three got good. What you cannot rent is a written copy of how *your* setup actually works, plus a network that turns a change in git into a running object at the right Gateway, as the right identity.
+You can rent a coding agent, a GPU, and a sandbox. All three got good. You cannot rent a written copy of how *you* operate, plus a network that turns a change in git into a running object at the right door, as the right identity, with an origin that already exists in three cities.
 
-UniFi is the mesh. Cilium BGP and ClusterMesh are east-west on top of it. garage-operator is the origin: S3 in all three cities. CloudNativePG is the databases. Kopiur snapshots the volumes and has to restore them. DNS and BGP are the two steering knobs. Tailscale is how someone proves they belong. Public ingress is how this meets the internet without putting the model on it. Flux ships git. Kata keeps the agents in a VM.
+UniFi is the mesh. Cilium is east-west. Tailscale is the badge. garage-operator is the origin — we wrote it for this. Flux ships git. Kata keeps the agents in a VM.
 
-The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the runbook. This post is the current shape of a framework I started writing down in 2024.
+The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the runbook. The [operator](https://github.com/rajsinghtech/garage-operator) is the S3 control plane. This post is what the 2024 framework turned into.

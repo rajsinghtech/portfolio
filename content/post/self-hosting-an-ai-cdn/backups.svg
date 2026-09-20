@@ -8,7 +8,6 @@
  viewBox="0.00 0.00 820.00 86.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(20.16 65.82)">
 <title>backups</title>
-<polygon fill="#1c1c1c" stroke="none" points="-20.16,20.16 -20.16,-65.82 799.63,-65.82 799.63,20.16 -20.16,20.16"/>
 <!-- pvc -->
 <g id="node1" class="node">
 <title>pvc</title>
