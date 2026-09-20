@@ -1,6 +1,6 @@
 ---
 title: Self-Hosting an AI CDN
-description: Three environments as a scheduling plane — where work runs, where it is stored, and who is allowed to knock
+description: Three sites I actually run — where work goes, how it stays put, and who is allowed in
 slug: self-hosting-an-ai-cdn
 date: 2026-09-18 00:00:00+0000
 image: cover.png
@@ -22,78 +22,72 @@ weight: 1
 draft: false
 ---
 
-A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). How I ran Kubernetes at home. What I picked. Why. That was a lab.
+A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). That was how I ran Kubernetes at home: distribution, CNI, storage, GitOps, the usual tour. I still run the same kind of thing. The question that actually eats my time now is simpler and worse: **where does this work belong.**
 
-The interesting problem is no longer "do I have a cluster." It is **where does this work run.** An agent opening a pull request, a model answering, a database keeping history, a camera in the house — those are not the same environment. If you put them all in one place you do not have a company. You have a server with opinions.
+A coding agent opening a pull request, a model answering a prompt, Postgres keeping WAL, and Home Assistant watching the house are not the same job. I used to pile them onto one cluster because that is what a homelab does. It got crowded, and the blast radius got stupid. So I split the work across three sites and I treat that split as the control plane. Not a fancy scheduler. A rule I can point at: this kind of work runs here, that kind of work runs there, and git is how I say so.
 
-I ended up with three environments that together are a scheduling control plane. Not a scheduler in the kube sense. A place you can actually put work, on purpose, because the network, the origin, and the doors already know the difference.
+I am calling this an **AI CDN** as a shorthand, not as a claim that I reinvented Cloudflare. A CDN puts a cached object near the person who asked for it. I do not have a fleet of equivalent edges serving the same model. I have one GPU site, one place the company gets written, and one house. The useful overlap is the other half of a CDN: an origin that already exists in more than one city, and a door policy for who may ask. That is what I actually built. The name is the analogy. The rest of this post is the mapping, and where it stops.
 
-I call the shape an **AI CDN** because a CDN was always a scheduling problem. Put the object near the person who needs it, behind the right door. The object used to be a file. Now it is an answer, a commit, or an agent that is allowed to change the company.
+I run this myself. When I say "we" later, I mean the garage-operator project I maintain, not a staffed company.
 
-You do not get that without an origin that already lives in more than one environment. I could not buy that for the object store I wanted, so I [wrote garage-operator](https://github.com/rajsinghtech/garage-operator) and we still maintain it.
+The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
 
-The runbook is [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests). This post is the claim.
+## Where work goes today
 
-## A control plane made of environments
+**Ottawa** is where I change the system. Git, login, dashboards, agent workspaces. If Ottawa is down, Robbinsdale and St. Petersburg keep their running pods. I cannot ship a change, and I cannot log in from the usual front door. That is an observed shape, not a slogan: headquarters is the writer, not the only survivor.
 
-**Ottawa** is where the company writes. Source control, login, the desks the agents sit at. If you are going to change how the system works, you change it here. Other environments can keep running without it. They just cannot ship.
+**Robbinsdale** is the house. Home Assistant, media, a second copy of family files. I do not put coding agents there. The house is not a factory, and I do not want an agent session on the same site as the cameras.
 
-**Robbinsdale** is where the house runs. The work here is local on purpose: lights, cameras, media, the copy of family files that should survive a bad day in another city. You do not schedule a coding agent onto the house because the house is not a factory. You schedule the house onto the house.
-
-**St. Petersburg** is where the model thinks. The GPUs live there. Ottawa asks questions over the private roads between environments, not over the public internet, and not over the VPN I use from a coffee shop. You schedule inference here because this is the only environment that can afford to be a brain. You do not schedule the company's git here. A GPU site that also has to be headquarters is a single bad afternoon.
+**St. Petersburg** is where the GPUs are. Two machines, one model serving process. Ottawa applications reach that process over the site-to-site network, pod to pod. I do not send model traffic out to the public internet, and I do not send it through Tailscale. Git does not live here on purpose. A GPU site that is also headquarters is one afternoon away from being both dumb and unreachable.
 
 ![Ottawa, Robbinsdale, and St. Petersburg](sites.png)
 
-The control plane is the map. Work has a place. The fabric is what makes "schedule it there" a real sentence instead of a hope.
+How a workload lands on a site today is not magic. I put a pointer file in that site's tree and merge it. No pointer, it does not deploy there. I have not built anything that picks a site for an agent at runtime. If I say "scheduling control plane," I mean that placement rule plus the network that makes the placement reachable. The next thing I want — "this agent session should run in St. Petersburg because the model is there" — does not exist yet.
 
-## The hallway and the badge
+## How the three sites talk
 
-The three environments are one private network. The house routers are meshed. Each cluster tells its local router what it owns. Ottawa talking to St. Petersburg should feel like a hallway.
+Each site has a UniFi gateway. The three gateways are meshed, so the LANs can reach each other. Cilium is the CNI. It BGP-peers with the *local* UniFi gateway and advertises the cluster's pod, service, and load-balancer addresses onto that LAN. ClusterMesh is how a service in Ottawa finds backends in St. Petersburg. That is the hallway: Ottawa asking the model, Garage replicating objects, CI borrowing capacity. It is ordinary L3, not a VPN hop.
 
-Identity is a different layer. People, laptops, and the tools that talk to the API prove who they are. That is the badge. I used to use the badge as the road too. [I wrote that version](/p/tailscale-operator/). For three environments it is the slow way. People get a badge. Work gets a hallway.
+Tailscale is how *I* get in. Laptops, phones, `kubectl`. I used to run cross-cluster traffic on Tailscale too. [I wrote that up](/p/tailscale-operator/). With three sites and a working UniFi mesh, it was the slower path for the work, so I stopped using it as the backbone. People still badge in that way. Cluster-to-cluster work does not.
 
-Internal is not a lock. If a name is on the house network, it is on the house network. The lock is which environment you were allowed to enter.
+Those two paths are easy to mix up, so here they are in one place. **Applications** in Ottawa talk to the model over ClusterMesh. **I** reach the model API from a laptop on the tailnet. The public internet gets a settings UI behind login, not the model endpoint.
 
-## Why we wrote an operator
+Also: a ClusterIP on this network is not private just because Kubernetes called it internal. BGP puts it on the LAN. The Tailscale subnet router can put the same ranges on the tailnet. If I need a lock, I put it on the Gateway or in policy, not in the service type.
 
-A CDN without a multi-environment origin is a website with extra YAML. Garage is that origin. **garage-operator** is how it shows up in git.
+## The origin I actually needed
 
-Off the shelf, the object store is a binary and a layout you edit by hand. That does not survive three environments and agents that open pull requests. The operator exists because this estate needed buckets, keys, and nodes to be files someone can review. We still maintain it because we run it — federation across environments, disks that stay on the machine they belong to, a gateway that keeps its identity when a pod moves.
+Garage is the object store. I wanted buckets, access keys, and nodes to be files in git, federated across the three sites, with a gateway that keeps its identity when a pod restarts. Upstream Garage is a binary and a layout you edit by hand. That is fine for one box. It is a bad interface for Flux and for agents that open pull requests.
 
-One estate. A copy in each environment. Applications never talk to a disk. They talk to a gateway in the environment they were scheduled into. If that environment's disks are gone, the gateway still reads from one that is up.
+So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator). One `GarageCluster` per site, zone named after the city, replication factor 3. Applications talk to a local gateway, not to a disk. If the local disks are gone but the network is up, the gateway can still read from another site. That is a different failure than "the whole city disappeared," and I am not going to pretend I have exercised every combination in anger. I have exercised the operator enough to keep running it.
 
-That is where database history, images, volume snapshots, and agent artifacts actually live. Without it you can schedule work. You cannot keep it.
+Rook-Ceph is still the block layer in Ottawa and Robbinsdale. Garage did not replace it. Ceph is disks for databases and PVCs. Garage is S3 for WAL, images, snapshots, and anything else that should exist in more than one city.
+
+Git holds the declarations: the cluster CR, the bucket, the key. The bytes live in Garage. If I write "if it is not in git, it does not last," I mean the *shape* of the system. The data has a different home.
 
 ![Distributed S3](garage.svg)
 
-## Which door the work is allowed to use
+## Who is allowed to ask
 
-A homelab that only exists on a VPN is a clubhouse. A company has a street.
+Every site has three doors: public internet, house LAN, tailnet. Names that only have a backend in Ottawa stay pinned to Ottawa. I have burned time on "global" names that 404 half the time because the other WAN edge has nothing behind them.
 
-Every environment has three doors: the public internet, the house, and the tailnet. Names that only live in Ottawa stay in Ottawa. Pretending they are global when the other environments have no backend is not scheduling. It is a coin flip.
+The model is the one I care about. The management UI can sit on a public name, behind login. The inference API does not. St. Petersburg is where that work was placed. The internet does not get a seat in that room.
 
-The model is the example I care about. The settings page can be on the street, behind a login. The model itself is not. Inference was scheduled into St. Petersburg. The public internet does not get a seat in that room.
-
-Steer people with DNS. Steer packets down the hallway. The thing I have not built yet is the obvious next scheduler: which environment should *this agent* work in. The model already works that way. Brain in St. Petersburg. Front desk in Ottawa. Hallway in between.
+DNS is how a person finds a door. BGP is how a packet finds a backend once it is on the fabric. I pick both of those by hand in git. I do not yet pick an environment for an agent the same way.
 
 ![Three doors](three-doors.svg)
 
-## The agent is work you schedule
+## A session, not a laptop
 
-An agent will run whatever it just wrote. That is the job. It does not get the building, and it does not get to pick the environment.
+Here is the path I actually use. An agent session starts in Ottawa, in a Kata VM — its own kernel, thrown away when the session ends. Most sessions cannot join the tailnet. A separate runtime is the only one that gets a TUN, and I treat that as a real permission, not a convenience. The agent can install junk, clone the repo, and open a pull request. Local checks render all three sites before I merge. Flux is the only writer to the clusters. The session can make a mess of its VM. It does not apply YAML to production.
 
-Every session is a small virtual machine. Its own kernel. Set the carpet on fire. When the session dies, the room dies. A few rooms are allowed to badge onto the tailnet from inside. Most are not. If every intern is a VPN node, you did not schedule them. You hired them as the network.
+That is a narrower guarantee than "the company only changes when I merge." Production GitOps changes when I merge. A session that was granted tailnet access can still reach whatever that identity can reach *before* a merge. I try not to grant that.
 
-The other half is the handshake. This summer the popular coding agents did not need to break out. They wrote a file, and a trusted program on the laptop ran it later. Here the handshake is a merge. The agent can wreck its office. The company only changes when I accept the commit.
+[Pillar's Week of Sandbox Escapes](https://www.pillar.security/blog/the-week-of-sandbox-escapes) (July 2026) is the reason I care about the handshake. Cursor, Codex, and Gemini CLI did not need to break the box. The agent wrote a file — a hook, a git config, a Docker socket — and something trusted on the host ran it later. I do not want my laptop to be that host, and I do not want Flux to be an implicit `eval` of whatever the agent left on disk. Review the diff. Then merge.
 
 ![Agent, office, merge](sandbox-merge.svg)
 
-If it is not in git, it does not last. Agents read the repo because the company is files. Checks run before merge. I am not trying to fire myself. I am trying to make the floor small enough that I can still walk it at night.
+Postgres is the same split as everything else. The cluster definition is in git. WAL and base backups go to Garage. A PVC is not backed up because a cronjob is green. It is backed up when I have restored it onto a new volume and the thing came back. I have been burned by the other kind of backup.
 
-Databases are work you schedule too. They are files in the repo. Their history goes to the origin, not a tarball on a laptop. A volume is not backed up because a schedule is green. It is backed up when you have restored it into a new disk and it came back.
+You can rent a coding agent, a GPU, and a sandbox. I do. I also run my own, because I wanted the placement rule, the doors, and the origin to be mine. garage-operator is the piece I could not rent in a shape I would merge.
 
-You can rent a coding agent. You can rent a GPU. You can rent a locked room. All three got good. You cannot rent a written copy of how *you* operate, plus a way to put work in the environment it belongs in, as the right person, with an origin that already exists in three cities.
-
-That last part is why garage-operator exists. We wrote it so this control plane had somewhere to put the bytes. We still maintain it because the bytes are still the point.
-
-The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are how it is wired. This post is what the lab turned into.
+The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the wiring. This is what the 2024 lab turned into once "where does this run" stopped being obvious.
