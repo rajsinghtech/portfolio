@@ -1,6 +1,6 @@
 ---
 title: Self-Hosting an AI CDN
-description: Three Talos sites, a UniFi mesh, garage-operator, and sandboxed agents — a company that happens to run at home
+description: A company that happens to run at home — three sites, an origin we built, and agents that do not get the keys
 slug: self-hosting-an-ai-cdn
 date: 2026-09-18 00:00:00+0000
 image: cover.png
@@ -12,7 +12,6 @@ tags:
     - cilium
     - tailscale
     - unifi
-    - bgp
     - ai
     - gitops
     - sandboxing
@@ -23,104 +22,84 @@ weight: 1
 draft: false
 ---
 
-A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). RKE2, Argo CD, Tailscale as the way clusters talked. That post was a lab.
+A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). That post was a lab: how I ran Kubernetes at home, what I picked, why.
 
-This is the same machines, grown up. Git is the source of truth. Flux ships it. UniFi is the WAN. Cilium is east-west. Agents write a lot of the diffs. I still merge. I call the shape an **AI CDN** because the job is the same as a CDN: put the right thing at the right edge, behind the right door. The thing used to be a file. Now it is a model, a commit, or an agent session that is allowed to open a pull request.
+This is the same machines. It is not the same job. Git is the only copy of the company that lasts. A merge is how the company changes. Agents write a lot of those diffs. I still decide what ships. I call the shape an **AI CDN** because the work looks like a CDN. Put the right thing at the right edge, behind the right door. Twenty years ago the thing was a file. Now it is an answer from a model, a commit, or an agent session that is allowed to open a pull request.
 
-You do not get that without an origin that already lives in more than one city. I did not find an operator that made Garage a GitOps object across three Kubernetes clusters, so I [wrote one](https://github.com/rajsinghtech/garage-operator). We still maintain it. That is the object store this whole thing sits on.
+You do not get a CDN without an origin that already lives in more than one city. I could not buy that for the object store I wanted, so I [wrote garage-operator](https://github.com/rajsinghtech/garage-operator) and we still maintain it. That is the unglamorous reason this works.
 
-Live manifests: [keiretsu-labs/kubernetes-manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
+The runbook is [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests). This post is the claim.
 
-## Three sites
+## Departments, not replicas
 
-They are departments, not replicas.
+**Ottawa** is headquarters. Source control, login, dashboards, the place agents sit down to work. If Ottawa is dark the other two sites keep doing their jobs. You just cannot log in, ship, or see.
 
-**Ottawa** is headquarters. Git, login, Grafana, the workspace control plane, the registry. If Ottawa is down the other two keep their pods. You just cannot log in, ship, or see.
+**Robbinsdale** is the house. Lights, cameras, media, a second copy of the family files.
 
-**Robbinsdale** is the house. Home Assistant, media, a second Ceph, a second Garage zone.
-
-**St. Petersburg** is inference. Two GB10 Sparks, one vLLM group. Ottawa talks to that model over Cilium, not Tailscale.
+**St. Petersburg** is the brain. The GPUs live there. Ottawa asks them questions over the private roads between the buildings, not over the public internet, and not over the VPN I use from a coffee shop.
 
 ![Ottawa, Robbinsdale, and St. Petersburg](sites.png)
 
-## The fabric
+They fail separately on purpose. That is the bill for self-hosting a company.
 
-Each site has a UniFi gateway. The three UDMs are meshed. That is the WAN. Cilium does not create the path. Cilium *uses* it.
+## Roads and badges
 
-Cilium is the CNI, kube-proxy off, BGP into the local UDM. It advertises pod, ClusterIP, and LoadBalancer addresses. ClusterMesh is how Ottawa calls the model in St. Petersburg by service name. Inference, Garage RPC, CI agents, metrics, logs all ride that hallway. Hubble is Wireshark for it.
+The sites are one private network. The house routers are meshed. The clusters plug into that and tell the local router what they own. Traffic between Ottawa and St. Petersburg should feel like a hallway, not a phone call across the internet.
 
-Cilium peers with the **local** router only. The mesh already moves packets between sites. A second BGP session to the other UDMs does not add a path. ClusterMesh is services. BGP is "tell my router about this cluster."
+Identity is a different layer. Laptops, phones, and `kubectl` prove who they are on the tailnet. That is the badge. I used to use the badge as the road too. [I wrote that version](/p/tailscale-operator/). For three sites it is the slow way. People get a badge. Machines get a hallway.
 
-![UniFi mesh](unifi-mesh.svg)
+Internal is not a lock. If a name is on the house network, it is on the house network. The lock is who is at the door.
 
-Tailscale is the badge, not the road. The operator's API proxy is how `kubectl` works. The kubeconfig in git has no real credentials. Grants are the org chart, and they have tests. I use Tailscale for laptops, phones, cluster API, and a workspace that needs to join the tailnet from *inside* its sandbox. I do not use it as the path between Ottawa and St. Petersburg. Most Kubernetes-plus-Tailscale writeups, including [my own](/p/tailscale-operator/), treat Tailscale as the interconnect. For three sites that is the slow way.
+## An origin in three cities
 
-"It is only a ClusterIP" is not a lock. BGP puts those addresses on the LAN, and the subnet router puts them on the tailnet. Use a Gateway policy, a Cilium policy, or a grant.
+A CDN without a multi-city origin is a website with extra YAML. Garage is that origin. **garage-operator** is how it gets into git.
 
-## The origin
+Off the shelf, the object store is a binary and a layout you edit by hand. That does not survive three sites and agents that open pull requests. The operator exists because this estate needed buckets, keys, and nodes to be files someone can review. We still maintain it because we run it.
 
-A CDN without a multi-city origin is a website with extra YAML. Garage is that origin. **garage-operator** is how it gets there.
+One estate. A copy in each city. One city down is fine. Two is an outage of the object store. Applications never talk to a disk. They talk to a gateway in the building they are in. If that building's disks are gone, the gateway still reads from a city that is up.
 
-Off the shelf, Garage is a binary and a layout you edit by hand. That does not survive three clusters, Flux, and agents that open pull requests. So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator): `GarageCluster`, `GarageNode`, `GarageBucket`, `GarageKey`. Flux owns those objects. We still maintain the operator because this estate is the reason it exists — multi-cluster federation, node-local disks, a gateway tier that keeps its identity, buckets as CRs.
-
-One cluster CR per site. Together they are one S3 estate, replication 3. One site down is fine. Two is an outage of the object store. RPC rides ClusterMesh, same hallway as the model. Apps never talk to a disk. They talk to the **local gateway**. Signatures verify on-site. If local storage is gone, the gateway still reads from a surviving zone.
-
-Postgres WAL, OCI blobs, volume snapshots, agent artifacts — that is what the factory actually stores.
+That is where database history, images, volume snapshots, and agent artifacts actually live. Without it, you can ship YAML and the GPUs can sit there, but nothing *exists* in more than one place.
 
 ![Distributed S3](garage.svg)
 
-## Three doors
+## A street, a house, a badge
 
-A homelab that only exists on a VPN is a clubhouse. This has a street.
+A homelab that only exists on a VPN is a clubhouse. A company has a street.
 
-Every cluster gets the same three Gateways:
+Three doors, on purpose, on every site: the public internet, the house LAN, and the tailnet. Names that only live in Ottawa stay in Ottawa. Pretending they are global when the other cities have no backend is not resilience.
 
-1. **`public`** — internet. Cloudflare, Let's Encrypt, k8gb for names that actually run in more than one place. Names that only exist in Ottawa stay pinned there. GSLB with no backend is a coin flip.
-2. **`private`** — the LAN. Same certs, fewer listeners.
-3. **`ts`** — tailnet. Cluster control and the model API.
+The model is the example I care about. The settings page can be on the street, behind a login. The model itself is not. A prompt should have to get the door wrong *and* the path wrong before it lands on the internet.
 
-The model *settings* page can be public, behind login. The model *API* is not. Path and hostname both have to be wrong for a prompt to hit the internet. The door is the Gateway, not the subnet.
+Steer people with DNS. Steer packets on the private network. I have not yet treated "which city should this agent work in" as the same kind of decision. The model already works that way: brain in St. Petersburg, front desk in Ottawa, hallway in between.
 
 ![Three doors](three-doors.svg)
 
-North-south is DNS, then Gateway, then maybe a cross-cluster service. East-west skips DNS and goes ClusterMesh. Mixing those up is how you get a 404 that looks like a network outage, or a network outage that looks like a cert problem.
+## Agents get an office
 
-Steer the client with DNS. Steer the packet with BGP. The thing I have not built yet is treating "which cluster should this agent run on" as the same kind of decision. The model already works that way: brain in St. Petersburg, front door in Ottawa, ClusterMesh in between.
+An agent will run whatever it just wrote. That is the job. It does not get the building.
 
-## Agents
+Every session is a small virtual machine. Its own kernel. Set the carpet on fire. When the session dies, the room dies. A few rooms are allowed to badge onto the tailnet from inside. Most are not. If every intern is a VPN node, you did not sandbox anything.
 
-Coding agents execute whatever they just wrote. Default containers share the host kernel. Fine for Flux. Not fine for a workspace.
-
-Every user session is Kata: a small VM, its own kernel. Trash the room, the room dies. A separate RuntimeClass is the only one allowed to open a TUN and run Tailscale inside the sandbox. If every sandbox is a VPN node, you did not sandbox anything. Locks go on the thing being protected. Once traffic is on Tailscale, source policy cannot always see the final destination.
-
-This summer, Cursor, Codex, and Gemini CLI did not need to break out. The agent wrote a file and a trusted program on the laptop ran it later. The hole was the handshake. Mine is a merge. The agent can wreck its VM. Production changes when I accept a commit.
+The other half is the handshake. This summer the popular coding agents did not need to break out. They wrote a file, and a trusted program on the laptop ran it later. Here the handshake is a merge. The agent can wreck its office. The company only changes when I accept the commit.
 
 ![Agent, office, merge](sandbox-merge.svg)
 
-The factory around that: a pointer file means an app is deployed. No pointer, not deployed. Agents read the repo. Local gates render all three clusters. GitHub Actions does it again. Merge to `main`. Flux is the only writer. I used to run Argo CD. I am not trying to fire myself. I am trying to make the floor small enough that I can still walk it.
+Around that: if it is not in git, it does not last. Agents read the repo because the company is files. Checks run before merge. I am not trying to fire myself. I am trying to make the floor small enough that I can still walk it at night.
 
-## Databases and disks
+Databases are the same idea. They are files in the repo. Their history goes to the origin in three cities, not a tarball on a laptop. A volume is not backed up because a schedule is green. It is backed up when you have restored it into a new disk and it came back.
 
-Postgres is CloudNativePG. A cluster CR per database. WAL and base backups go to Garage — that is why the operator exists. Restore is from object storage, not a tarball on a laptop.
+## What you actually own
 
-YAML in git is not a backup of a PVC. Kopiur snapshots the volume, keeps it in Garage, restores into a **new** PVC. A schedule that never produced a snapshot is not a backup. A restore you have not run is not a restore. Ottawa and Robbinsdale snapshot Ceph. St. Petersburg is mostly local-path; Home Assistant is the one that has to work.
+**Ottawa down:** the company goes blind. The other sites keep running.
 
-Rook-Ceph is block at Ottawa and Robbinsdale. A Spark dying is data loss for anything that only lived there and was not snapshotted.
+**St. Petersburg down:** the local brain dies. The factory can still ship. It gets dumber, or it borrows a rented model.
 
-## What breaks
+**Robbinsdale down:** the house and one copy of the files. Headquarters still answers the phone.
 
-**Ottawa down:** auth, git, CI, Grafana. Other sites keep running. You cannot see them or ship.
+I picked those numbers. Renting the factory, the sandbox, or the GPUs means someone else did.
 
-**St. Petersburg down:** local inference dies. The factory still merges. Clients fail over through the front door.
+You can rent a coding agent. You can rent a GPU. You can rent a locked room. All three got good. You cannot rent a written copy of how *you* operate, plus a network that turns a change in that copy into a running thing at the right door, as the right person, with an origin that already exists in three cities.
 
-**Robbinsdale down:** the house and one Garage/Ceph zone. Ottawa still answers.
+That last part is why garage-operator exists. We wrote it for this. We still maintain it because this is still the thing it has to do.
 
-I picked those numbers. If you rent the factory, the sandbox, or the GPUs, someone else did.
-
-## The point
-
-You can rent a coding agent, a GPU, and a sandbox. All three got good. You cannot rent a written copy of how *you* operate, plus a network that turns a change in git into a running object at the right door, as the right identity, with an origin that already exists in three cities.
-
-UniFi is the mesh. Cilium is east-west. Tailscale is the badge. garage-operator is the origin — we wrote it for this. Flux ships git. Kata keeps the agents in a VM.
-
-The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the runbook. The [operator](https://github.com/rajsinghtech/garage-operator) is the S3 control plane. This post is what the 2024 framework turned into.
+The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are how it is wired. This post is what the lab turned into.
