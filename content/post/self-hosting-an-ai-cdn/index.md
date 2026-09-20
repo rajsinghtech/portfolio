@@ -48,6 +48,8 @@ Live manifests are in [keiretsu-labs/kubernetes-manifests](https://github.com/ke
 - **Envoy Gateway** - Three Gateways per cluster: `public`, `private`, `ts`.
 - **Cloudflare + k8gb** - Public DNS and GSLB for names that actually run in more than one place.
 - **garage-operator** - Distributed S3. One GarageCluster per site, one logical estate. Replication 3. Apps talk to a local gateway.
+- **CloudNativePG** - Postgres. WAL and base backups land in Garage.
+- **Kopiur** - Volume snapshots and restore. Proof is a restore into a new PVC, not a green schedule.
 - **Forgejo + Woodpecker** - Git and CI, self-hosted.
 - **vLLM** - Local model on two DGX Sparks in St. Petersburg.
 - **Kata Containers** - Each agent session gets its own VM. gVisor is the cheaper fence.
@@ -182,9 +184,25 @@ Agents read the repo. Local gates render all three clusters before commit. GitHu
 
 That is the factory. Agents write. Checks run. I merge. I am not trying to remove myself from the loop. I am trying to make the loop small enough that I can still walk it.
 
+### Databases - CloudNativePG
+
+Postgres is CloudNativePG, not a pet VM. A `Cluster` CR per database, two instances where it matters. Git, CI, photos, the apps the factory actually runs — they get a database the same way they get a Gateway: a file in the repo.
+
+WAL and base backups go to Garage. That is the point of distributed S3 as the origin. A disk dying in Ottawa does not mean the database catalog died with it. Restore is from object storage, not from a laptop tarball.
+
+![Databases](databases.png)
+
+### Volume backup and restore - Kopiur
+
+YAML in git is not a backup of a PVC. Kopiur is the volume plane: snapshot the disk, keep the snapshot in Garage, restore into a **new** PVC. A schedule that never produced a snapshot is not a backup. A restore you have not run is not a restore.
+
+Ottawa and Robbinsdale snapshot Ceph-backed volumes. St. Petersburg has less of that — local-path on the Sparks is a different boundary, and Home Assistant is the one that has to work. Retention is daily / weekly / monthly. I do not keep a second backup product next to it.
+
+![Volume backup](backups.png)
+
 ### Storage and the rest
 
-Rook-Ceph is block at Ottawa and Robbinsdale. St. Petersburg is local-path, so a Spark dying is data loss for anything that only lived there. CNPG for Postgres, WAL to Garage. Spegel so nodes share image layers. Zot for OCI, blobs in Garage.
+Rook-Ceph is block at Ottawa and Robbinsdale. St. Petersburg is local-path, so a Spark dying is data loss for anything that only lived there and was not snapshotted. Spegel so nodes share image layers. Zot for OCI, blobs in Garage.
 
 The unglamorous list is the company: cert-manager, DNS-01, encrypted secrets, upgrades that do not take all three sites down at once.
 
@@ -202,6 +220,6 @@ I picked those numbers. If you rent the factory, the sandbox, or the GPUs, someo
 
 You can rent a coding agent, a GPU, and a sandbox. All three got good. What you cannot rent is a written copy of how *your* setup actually works, plus a network that turns a change in git into a running object at the right Gateway, as the right identity.
 
-UniFi is the mesh. Cilium BGP and ClusterMesh are east-west on top of it. garage-operator is the origin: S3 in all three cities. DNS and BGP are the two steering knobs. Tailscale is how someone proves they belong. Public ingress is how this meets the internet without putting the model on it. Flux ships git. Kata keeps the agents in a VM.
+UniFi is the mesh. Cilium BGP and ClusterMesh are east-west on top of it. garage-operator is the origin: S3 in all three cities. CloudNativePG is the databases. Kopiur snapshots the volumes and has to restore them. DNS and BGP are the two steering knobs. Tailscale is how someone proves they belong. Public ingress is how this meets the internet without putting the model on it. Flux ships git. Kata keeps the agents in a VM.
 
 The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the runbook. This post is the current shape of a framework I started writing down in 2024.

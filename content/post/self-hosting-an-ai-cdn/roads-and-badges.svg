@@ -8,81 +8,81 @@
  viewBox="0.00 0.00 210.00 501.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(20.16 480.46)">
 <title>roads</title>
-<polygon fill="#ffffff" stroke="none" points="-20.16,20.16 -20.16,-480.46 190.16,-480.46 190.16,20.16 -20.16,20.16"/>
+<polygon fill="#1c1c1c" stroke="none" points="-20.16,20.16 -20.16,-480.46 190.16,-480.46 190.16,20.16 -20.16,20.16"/>
 <g id="clust1" class="cluster">
 <title>cluster_roads</title>
-<path fill="#f0fff4" stroke="#1a7f37" d="M20,-8C20,-8 150,-8 150,-8 156,-8 162,-14 162,-20 162,-20 162,-260.48 162,-260.48 162,-266.48 156,-272.48 150,-272.48 150,-272.48 20,-272.48 20,-272.48 14,-272.48 8,-266.48 8,-260.48 8,-260.48 8,-20 8,-20 8,-14 14,-8 20,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-256.13" font-family="Helvetica,sans-Serif" font-size="13.00">Cilium &#160;· &#160;the roads</text>
+<path fill="#222222" stroke="#5dba5d" d="M20,-8C20,-8 150,-8 150,-8 156,-8 162,-14 162,-20 162,-20 162,-260.48 162,-260.48 162,-266.48 156,-272.48 150,-272.48 150,-272.48 20,-272.48 20,-272.48 14,-272.48 8,-266.48 8,-260.48 8,-260.48 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-256.13" font-family="Helvetica,sans-Serif" font-size="13.00" fill="#e8e8e8">Cilium &#160;· &#160;the roads</text>
 </g>
 <!-- you -->
 <g id="node1" class="node">
 <title>you</title>
-<path fill="#fff1e5" stroke="#bc4c00" stroke-width="1.6" d="M129.72,-460.3C129.72,-460.3 40.29,-460.3 40.29,-460.3 34.28,-460.3 28.28,-454.3 28.28,-448.3 28.28,-448.3 28.28,-426.64 28.28,-426.64 28.28,-420.64 34.28,-414.64 40.28,-414.64 40.28,-414.64 129.72,-414.64 129.72,-414.64 135.72,-414.64 141.72,-420.64 141.72,-426.64 141.72,-426.64 141.72,-448.3 141.72,-448.3 141.72,-454.3 135.72,-460.3 129.72,-460.3"/>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-438.82" font-family="Helvetica,sans-Serif" font-size="12.00">you</text>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-426.07" font-family="Helvetica,sans-Serif" font-size="12.00">laptop &#160;· &#160;phone</text>
+<path fill="#1e3a24" stroke="#5dba5d" stroke-width="1.6" d="M129.72,-460.3C129.72,-460.3 40.29,-460.3 40.29,-460.3 34.28,-460.3 28.28,-454.3 28.28,-448.3 28.28,-448.3 28.28,-426.64 28.28,-426.64 28.28,-420.64 34.28,-414.64 40.28,-414.64 40.28,-414.64 129.72,-414.64 129.72,-414.64 135.72,-414.64 141.72,-420.64 141.72,-426.64 141.72,-426.64 141.72,-448.3 141.72,-448.3 141.72,-454.3 135.72,-460.3 129.72,-460.3"/>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-438.82" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">you</text>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-426.07" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">laptop &#160;· &#160;phone</text>
 </g>
 <!-- ts -->
 <g id="node2" class="node">
 <title>ts</title>
-<path fill="#ddf4ff" stroke="#0969da" stroke-width="1.6" d="M146.59,-359.39C146.59,-359.39 23.41,-359.39 23.41,-359.39 17.41,-359.39 11.41,-353.39 11.41,-347.39 11.41,-347.39 11.41,-325.73 11.41,-325.73 11.41,-319.73 17.41,-313.73 23.41,-313.73 23.41,-313.73 146.59,-313.73 146.59,-313.73 152.59,-313.73 158.59,-319.73 158.59,-325.73 158.59,-325.73 158.59,-347.39 158.59,-347.39 158.59,-353.39 152.59,-359.39 146.59,-359.39"/>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-337.91" font-family="Helvetica,sans-Serif" font-size="12.00">Tailscale &#160;· &#160;the badge</text>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-325.16" font-family="Helvetica,sans-Serif" font-size="12.00">proves who you are</text>
+<path fill="#2a2a2a" stroke="#5dba5d" stroke-width="1.6" d="M146.59,-359.39C146.59,-359.39 23.41,-359.39 23.41,-359.39 17.41,-359.39 11.41,-353.39 11.41,-347.39 11.41,-347.39 11.41,-325.73 11.41,-325.73 11.41,-319.73 17.41,-313.73 23.41,-313.73 23.41,-313.73 146.59,-313.73 146.59,-313.73 152.59,-313.73 158.59,-319.73 158.59,-325.73 158.59,-325.73 158.59,-347.39 158.59,-347.39 158.59,-353.39 152.59,-359.39 146.59,-359.39"/>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-337.91" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">Tailscale &#160;· &#160;the badge</text>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-325.16" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">proves who you are</text>
 </g>
 <!-- you&#45;&gt;ts -->
 <g id="edge4" class="edge">
 <title>you&#45;&gt;ts</title>
-<path fill="none" stroke="#57606a" d="M85,-414.03C85,-400.49 85,-383.07 85,-368.27"/>
-<polygon fill="#57606a" stroke="#57606a" points="87.45,-368.43 85,-361.43 82.55,-368.43 87.45,-368.43"/>
-<text xml:space="preserve" text-anchor="middle" x="96.62" y="-383.14" font-family="Helvetica,sans-Serif" font-size="10.00">log in</text>
+<path fill="none" stroke="#c8c8c8" d="M85,-414.03C85,-400.49 85,-383.07 85,-368.27"/>
+<polygon fill="#c8c8c8" stroke="#c8c8c8" points="87.45,-368.43 85,-361.43 82.55,-368.43 87.45,-368.43"/>
+<text xml:space="preserve" text-anchor="middle" x="96.62" y="-383.14" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#b8b8b8">log in</text>
 </g>
 <!-- ot -->
 <g id="node3" class="node">
 <title>ot</title>
-<path fill="#ffffff" stroke="#8c959f" d="M124.09,-242.98C124.09,-242.98 45.91,-242.98 45.91,-242.98 39.91,-242.98 33.91,-236.98 33.91,-230.98 33.91,-230.98 33.91,-209.32 33.91,-209.32 33.91,-203.32 39.91,-197.32 45.91,-197.32 45.91,-197.32 124.09,-197.32 124.09,-197.32 130.09,-197.32 136.09,-203.32 136.09,-209.32 136.09,-209.32 136.09,-230.98 136.09,-230.98 136.09,-236.98 130.09,-242.98 124.09,-242.98"/>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-221.5" font-family="Helvetica,sans-Serif" font-size="12.00">Ottawa</text>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-208.75" font-family="Helvetica,sans-Serif" font-size="12.00">headquarters</text>
+<path fill="#2a2a2a" stroke="#5dba5d" d="M124.09,-242.98C124.09,-242.98 45.91,-242.98 45.91,-242.98 39.91,-242.98 33.91,-236.98 33.91,-230.98 33.91,-230.98 33.91,-209.32 33.91,-209.32 33.91,-203.32 39.91,-197.32 45.91,-197.32 45.91,-197.32 124.09,-197.32 124.09,-197.32 130.09,-197.32 136.09,-203.32 136.09,-209.32 136.09,-209.32 136.09,-230.98 136.09,-230.98 136.09,-236.98 130.09,-242.98 124.09,-242.98"/>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-221.5" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">Ottawa</text>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-208.75" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">headquarters</text>
 </g>
 <!-- ts&#45;&gt;ot -->
 <g id="edge5" class="edge">
 <title>ts&#45;&gt;ot</title>
-<path fill="none" stroke="#57606a" d="M85,-312.96C85,-295.45 85,-271.02 85,-251.76"/>
-<polygon fill="#57606a" stroke="#57606a" points="87.45,-251.83 85,-244.83 82.55,-251.83 87.45,-251.83"/>
-<text xml:space="preserve" text-anchor="middle" x="110.5" y="-282.23" font-family="Helvetica,sans-Serif" font-size="10.00">open a door</text>
+<path fill="none" stroke="#c8c8c8" d="M85,-312.96C85,-295.45 85,-271.02 85,-251.76"/>
+<polygon fill="#c8c8c8" stroke="#c8c8c8" points="87.45,-251.83 85,-244.83 82.55,-251.83 87.45,-251.83"/>
+<text xml:space="preserve" text-anchor="middle" x="110.5" y="-282.23" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#b8b8b8">open a door</text>
 </g>
 <!-- rb -->
 <g id="node4" class="node">
 <title>rb</title>
-<path fill="#ffffff" stroke="#8c959f" d="M103.97,-152.32C103.97,-152.32 28.03,-152.32 28.03,-152.32 22.04,-152.32 16.03,-146.32 16.03,-140.32 16.03,-140.32 16.03,-118.66 16.03,-118.66 16.03,-112.66 22.03,-106.66 28.03,-106.66 28.03,-106.66 103.97,-106.66 103.97,-106.66 109.97,-106.66 115.97,-112.66 115.97,-118.66 115.97,-118.66 115.97,-140.32 115.97,-140.32 115.97,-146.32 109.97,-152.32 103.97,-152.32"/>
-<text xml:space="preserve" text-anchor="middle" x="66" y="-130.84" font-family="Helvetica,sans-Serif" font-size="12.00">Robbinsdale</text>
-<text xml:space="preserve" text-anchor="middle" x="66" y="-118.09" font-family="Helvetica,sans-Serif" font-size="12.00">the house</text>
+<path fill="#2a2a2a" stroke="#5dba5d" d="M103.97,-152.32C103.97,-152.32 28.03,-152.32 28.03,-152.32 22.04,-152.32 16.03,-146.32 16.03,-140.32 16.03,-140.32 16.03,-118.66 16.03,-118.66 16.03,-112.66 22.03,-106.66 28.03,-106.66 28.03,-106.66 103.97,-106.66 103.97,-106.66 109.97,-106.66 115.97,-112.66 115.97,-118.66 115.97,-118.66 115.97,-140.32 115.97,-140.32 115.97,-146.32 109.97,-152.32 103.97,-152.32"/>
+<text xml:space="preserve" text-anchor="middle" x="66" y="-130.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">Robbinsdale</text>
+<text xml:space="preserve" text-anchor="middle" x="66" y="-118.09" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">the house</text>
 </g>
 <!-- ot&#45;&gt;rb -->
 <g id="edge1" class="edge">
 <title>ot&#45;&gt;rb</title>
-<path fill="none" stroke="#57606a" d="M78.52,-188.92C76.6,-179.94 74.49,-170.1 72.56,-161.09"/>
-<polygon fill="#57606a" stroke="#57606a" points="76.12,-189.42 79.99,-195.75 80.91,-188.4 76.12,-189.42"/>
-<polygon fill="#57606a" stroke="#57606a" points="74.95,-160.58 71.09,-154.25 70.16,-161.61 74.95,-160.58"/>
+<path fill="none" stroke="#c8c8c8" d="M78.52,-188.92C76.6,-179.94 74.49,-170.1 72.56,-161.09"/>
+<polygon fill="#c8c8c8" stroke="#c8c8c8" points="76.12,-189.42 79.99,-195.75 80.91,-188.4 76.12,-189.42"/>
+<polygon fill="#c8c8c8" stroke="#c8c8c8" points="74.95,-160.58 71.09,-154.25 70.16,-161.61 74.95,-160.58"/>
 </g>
 <!-- sp -->
 <g id="node5" class="node">
 <title>sp</title>
-<path fill="#ffffff" stroke="#8c959f" d="M126.72,-61.66C126.72,-61.66 43.29,-61.66 43.29,-61.66 37.28,-61.66 31.28,-55.66 31.28,-49.66 31.28,-49.66 31.28,-28 31.28,-28 31.28,-22 37.28,-16 43.28,-16 43.28,-16 126.72,-16 126.72,-16 132.72,-16 138.72,-22 138.72,-28 138.72,-28 138.72,-49.66 138.72,-49.66 138.72,-55.66 132.72,-61.66 126.72,-61.66"/>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-40.18" font-family="Helvetica,sans-Serif" font-size="12.00">St. Petersburg</text>
-<text xml:space="preserve" text-anchor="middle" x="85" y="-27.43" font-family="Helvetica,sans-Serif" font-size="12.00">the brain</text>
+<path fill="#2a2a2a" stroke="#5dba5d" d="M126.72,-61.66C126.72,-61.66 43.29,-61.66 43.29,-61.66 37.28,-61.66 31.28,-55.66 31.28,-49.66 31.28,-49.66 31.28,-28 31.28,-28 31.28,-22 37.28,-16 43.28,-16 43.28,-16 126.72,-16 126.72,-16 132.72,-16 138.72,-22 138.72,-28 138.72,-28 138.72,-49.66 138.72,-49.66 138.72,-55.66 132.72,-61.66 126.72,-61.66"/>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-40.18" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">St. Petersburg</text>
+<text xml:space="preserve" text-anchor="middle" x="85" y="-27.43" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#e8e8e8">the brain</text>
 </g>
 <!-- ot&#45;&gt;sp -->
 <g id="edge2" class="edge">
 <title>ot&#45;&gt;sp</title>
-<path fill="none" stroke="#57606a" d="M111.91,-190.83C120.73,-179.7 129.44,-166.26 134,-152.32 140.31,-133.03 140.31,-125.95 134,-106.66 129.44,-92.72 120.73,-79.28 111.91,-68.15"/>
-<polygon fill="#57606a" stroke="#57606a" points="110.27,-188.97 107.7,-195.93 114.04,-192.09 110.27,-188.97"/>
-<polygon fill="#57606a" stroke="#57606a" points="114.04,-66.89 107.7,-63.05 110.27,-70.01 114.04,-66.89"/>
+<path fill="none" stroke="#c8c8c8" d="M111.91,-190.83C120.73,-179.7 129.44,-166.26 134,-152.32 140.31,-133.03 140.31,-125.95 134,-106.66 129.44,-92.72 120.73,-79.28 111.91,-68.15"/>
+<polygon fill="#c8c8c8" stroke="#c8c8c8" points="110.27,-188.97 107.7,-195.93 114.04,-192.09 110.27,-188.97"/>
+<polygon fill="#c8c8c8" stroke="#c8c8c8" points="114.04,-66.89 107.7,-63.05 110.27,-70.01 114.04,-66.89"/>
 </g>
 <!-- rb&#45;&gt;sp -->
 <g id="edge3" class="edge">
 <title>rb&#45;&gt;sp</title>
-<path fill="none" stroke="#57606a" d="M72.48,-98.26C74.4,-89.28 76.51,-79.44 78.44,-70.43"/>
-<polygon fill="#57606a" stroke="#57606a" points="70.09,-97.74 71.01,-105.09 74.88,-98.76 70.09,-97.74"/>
-<polygon fill="#57606a" stroke="#57606a" points="80.84,-70.95 79.91,-63.59 76.05,-69.92 80.84,-70.95"/>
+<path fill="none" stroke="#c8c8c8" d="M72.48,-98.26C74.4,-89.28 76.51,-79.44 78.44,-70.43"/>
+<polygon fill="#c8c8c8" stroke="#c8c8c8" points="70.09,-97.74 71.01,-105.09 74.88,-98.76 70.09,-97.74"/>
+<polygon fill="#c8c8c8" stroke="#c8c8c8" points="80.84,-70.95 79.91,-63.59 76.05,-69.92 80.84,-70.95"/>
 </g>
 </g>
 </svg>

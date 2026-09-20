@@ -1,0 +1,19 @@
+digraph backups {
+  graph [
+    rankdir=LR, splines=spline, bgcolor="#1c1c1c",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.45, ranksep=0.7,
+    fontcolor="#e8e8e8"
+  ];
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
+        fillcolor="#2a2a2a", color="#5dba5d", fontcolor="#e8e8e8", margin="0.22,0.14"];
+  edge [fontname="Helvetica", fontsize=10, color="#c8c8c8", fontcolor="#b8b8b8", arrowsize=0.7];
+
+  pvc [label="the volume\nCeph or local disk", fillcolor="#1e3a24", color="#5dba5d"];
+  kopiur [label="Kopiur\nsnapshot  ·  restore"];
+  garage [label="Garage\nwhere snapshots live"];
+  proof [label="restore into a new PVC\nthat is the proof"];
+
+  pvc -> kopiur [label="snapshot"];
+  kopiur -> garage;
+  garage -> proof [label="restore"];
+}

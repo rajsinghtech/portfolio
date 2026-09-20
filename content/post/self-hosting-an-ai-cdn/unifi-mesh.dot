@@ -1,15 +1,16 @@
 digraph unifi {
   graph [
-    rankdir=LR, splines=spline, bgcolor="#ffffff",
-    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.4, ranksep=1.0
+    rankdir=LR, splines=spline, bgcolor="#1c1c1c",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.4, ranksep=1.0,
+    fontcolor="#e8e8e8"
   ];
   node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
-        fillcolor="#ffffff", color="#8c959f", margin="0.20,0.12"];
-  edge [fontname="Helvetica", fontsize=10, color="#57606a", arrowsize=0.7];
+        fillcolor="#2a2a2a", color="#5dba5d", fontcolor="#e8e8e8", margin="0.20,0.12"];
+  edge [fontname="Helvetica", fontsize=10, color="#c8c8c8", fontcolor="#b8b8b8", arrowsize=0.7];
 
   subgraph cluster_unifi {
     label="UniFi site-to-site mesh  ·  the underlay";
-    style="rounded,filled"; fillcolor="#fff1e5"; color="#bc4c00"; fontsize=12;
+    style="rounded,filled"; fillcolor="#222222"; color="#5dba5d"; fontsize=12; fontcolor="#e8e8e8";
     u_ot [label="Ottawa UDM"];
     u_rb [label="Robbinsdale UDM"];
     u_sp [label="St. Petersburg UDM"];
@@ -20,10 +21,10 @@ digraph unifi {
 
   subgraph cluster_cilium {
     label="Cilium  ·  BGP + ClusterMesh";
-    style="rounded,filled"; fillcolor="#f0fff4"; color="#1a7f37"; fontsize=12;
-    c_ot [label="Ottawa\npod / service CIDRs"];
-    c_rb [label="Robbinsdale\npod / service CIDRs"];
-    c_sp [label="St. Petersburg\npod / service CIDRs"];
+    style="rounded,filled"; fillcolor="#1e3a24"; color="#5dba5d"; fontsize=12; fontcolor="#e8e8e8";
+    c_ot [label="Ottawa\naddresses"];
+    c_rb [label="Robbinsdale\naddresses"];
+    c_sp [label="St. Petersburg\naddresses"];
     c_ot -> c_rb [dir=both, label="east-west"];
     c_ot -> c_sp [dir=both, label="east-west"];
     c_rb -> c_sp [dir=both, label="east-west"];

@@ -1,0 +1,35 @@
+digraph bgp {
+  graph [
+    rankdir=LR, splines=true, bgcolor="#ffffff",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.35, ranksep=1.2
+  ];
+  node [fontname="Helvetica", fontsize=11, shape=box, style="filled,rounded",
+        fillcolor="#ffffff", color="#8c959f", margin="0.18,0.10"];
+  edge [fontname="Helvetica", fontsize=9, color="#57606a", arrowsize=0.6];
+
+  subgraph cluster_cilium {
+    label="Cilium speakers  ·  advertise from every site";
+    style="rounded,filled"; fillcolor="#f0fff4"; color="#1a7f37"; fontsize=12;
+    c_ot [label="Ottawa Cilium\nASN 64514"];
+    c_rb [label="Robbinsdale Cilium\nASN 64512"];
+    c_sp [label="St. Petersburg Cilium\nASN 64516"];
+  }
+
+  subgraph cluster_udm {
+    label="UniFi routers  ·  every UDM hears every cluster";
+    style="rounded,filled"; fillcolor="#fff1e5"; color="#bc4c00"; fontsize=12;
+    u_ot [label="Ottawa UDM\n192.168.169.1  ASN 64515"];
+    u_rb [label="Robbinsdale UDM\n192.168.50.1  ASN 64513"];
+    u_sp [label="St. Petersburg UDM\n192.168.73.1  ASN 64517"];
+  }
+
+  c_ot -> u_ot [label="local"];
+  c_ot -> u_rb;
+  c_ot -> u_sp;
+  c_rb -> u_ot;
+  c_rb -> u_rb [label="local"];
+  c_rb -> u_sp;
+  c_sp -> u_ot;
+  c_sp -> u_rb;
+  c_sp -> u_sp [label="local"];
+}

@@ -1,26 +1,27 @@
 digraph doors {
   graph [
-    rankdir=LR, splines=spline, bgcolor="#ffffff",
-    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.4, ranksep=0.8
+    rankdir=LR, splines=spline, bgcolor="#1c1c1c",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.4, ranksep=0.8,
+    fontcolor="#e8e8e8"
   ];
   node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
-        fillcolor="#ffffff", color="#8c959f", margin="0.20,0.12"];
-  edge [fontname="Helvetica", fontsize=10, color="#57606a", arrowsize=0.7];
+        fillcolor="#2a2a2a", color="#5dba5d", fontcolor="#e8e8e8", margin="0.20,0.12"];
+  edge [fontname="Helvetica", fontsize=10, color="#c8c8c8", fontcolor="#b8b8b8", arrowsize=0.7];
 
   subgraph cluster_who {
     label="Who is knocking";
-    style="rounded,filled"; fillcolor="#f6f8fa"; color="#8c959f"; fontsize=12;
+    style="rounded,filled"; fillcolor="#222222"; color="#5dba5d"; fontsize=12; fontcolor="#e8e8e8";
     internet [label="the street\nanyone on the internet"];
     lan [label="the house\nphones on the LAN"];
     tailnet [label="the badge\npeople on Tailscale"];
   }
 
-  street [label="public door\nwebsites, login page", fillcolor="#dafbe1", color="#1a7f37"];
-  house [label="house door\nmore, still not everything", fillcolor="#fff1e5", color="#bc4c00"];
-  badge [label="badge door\nmodel API, cluster keys", fillcolor="#ddf4ff", color="#0969da"];
+  street [label="public door\nwebsites, login page", fillcolor="#1e3a24", color="#5dba5d"];
+  house [label="house door\nmore, still not everything"];
+  badge [label="badge door\nmodel API, cluster keys"];
 
-  building [label="the building", fillcolor="#ffffff", color="#24292f", penwidth=1.6];
-  model [label="the brain\nnot on the sidewalk", fillcolor="#f0fff4", color="#1a7f37"];
+  building [label="the building", fillcolor="#2a2a2a", color="#e8e8e8", penwidth=1.6];
+  model [label="the brain\nnot on the sidewalk", fillcolor="#1e3a24", color="#5dba5d"];
 
   internet -> street;
   lan -> house;

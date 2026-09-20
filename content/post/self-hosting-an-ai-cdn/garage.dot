@@ -1,20 +1,21 @@
 digraph garage {
   graph [
-    rankdir=LR, splines=spline, bgcolor="#ffffff",
-    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.45, ranksep=0.8
+    rankdir=LR, splines=spline, bgcolor="#1c1c1c",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.45, ranksep=0.8,
+    fontcolor="#e8e8e8"
   ];
   node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
-        fillcolor="#ffffff", color="#8c959f", margin="0.22,0.14"];
-  edge [fontname="Helvetica", fontsize=10, color="#57606a", arrowsize=0.7];
+        fillcolor="#2a2a2a", color="#5dba5d", fontcolor="#e8e8e8", margin="0.22,0.14"];
+  edge [fontname="Helvetica", fontsize=10, color="#c8c8c8", fontcolor="#b8b8b8", arrowsize=0.7];
 
   op [
     label="garage-operator\nGarageCluster  ·  GarageBucket  ·  GarageKey",
-    fillcolor="#ddf4ff", color="#0969da", penwidth=1.6
+    fillcolor="#1e3a24", color="#5dba5d", penwidth=1.6
   ];
 
   subgraph cluster_estate {
     label="one S3 estate";
-    style="rounded,filled"; fillcolor="#f0fff4"; color="#1a7f37"; fontsize=12;
+    style="rounded,filled"; fillcolor="#222222"; color="#5dba5d"; fontsize=12; fontcolor="#e8e8e8";
     ot [label="Ottawa zone"];
     rb [label="Robbinsdale zone"];
     sp [label="St. Petersburg zone"];
@@ -25,13 +26,12 @@ digraph garage {
 
   gw [
     label="local gateway\napps talk here, not to disks",
-    fillcolor="#fff1e5", color="#bc4c00", penwidth=1.6
+    fillcolor="#1e3a24", color="#5dba5d", penwidth=1.6
   ];
 
   op -> ot;
   op -> rb;
   op -> sp;
   ot -> gw;
-  rb -> gw [style=invis];
   sp -> gw;
 }
