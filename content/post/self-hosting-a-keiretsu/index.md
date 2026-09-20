@@ -1,7 +1,7 @@
 ---
-title: Self-Hosting an AI CDN
-description: Three sites I actually run — where work goes, how it stays put, and who is allowed in
-slug: self-hosting-an-ai-cdn
+title: Self-Hosting a Keiretsu
+description: Three affiliated sites I actually run — where work goes, how it stays put, and who is allowed in
+slug: self-hosting-a-keiretsu
 date: 2026-09-18 00:00:00+0000
 image: cover.png
 categories:
@@ -15,7 +15,7 @@ tags:
     - ai
     - gitops
     - sandboxing
-    - cdn
+    - keiretsu
     - garage
     - networking
 weight: 1
@@ -26,9 +26,9 @@ A couple years ago I wrote about my [homelab cluster framework](/p/cluster-frame
 
 A coding agent opening a pull request, a model answering a prompt, Postgres keeping WAL, and Home Assistant watching the house are not the same job. I used to pile them onto one cluster because that is what a homelab does. It got crowded, and the blast radius got stupid. So I split the work across three sites and I treat that split as the control plane. Not a fancy scheduler. A rule I can point at: this kind of work runs here, that kind of work runs there, and git is how I say so.
 
-I am calling this an **AI CDN** as a shorthand, not as a claim that I reinvented Cloudflare. A CDN puts a cached object near the person who asked for it. I do not have a fleet of equivalent edges serving the same model. I have one GPU site, one place the company gets written, and one house. The useful overlap is the other half of a CDN: an origin that already exists in more than one city, and a door policy for who may ask. That is what I actually built. The name is the analogy. The rest of this post is the mapping, and where it stops.
+The right name for that is not a CDN. I do not have a dozen equivalent edges caching the same object. I have affiliated sites that share an origin, a network, and a set of doors, and they are deliberately *not* copies of each other. That is a **keiretsu**: a group of companies that stay separate on purpose and still operate as one. Ottawa writes. Robbinsdale keeps the house. St. Petersburg thinks. Garage is the warehouse they all use. I am not claiming I reinvented Japanese industrial policy. I am saying this is closer to how the thing actually behaves than "AI CDN" ever was.
 
-I run this myself. When I say "we" later, I mean the garage-operator project I maintain, not a staffed company.
+I run this myself. When I say "we" later, I mean the garage-operator project I maintain, not a staffed conglomerate.
 
 The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
 
@@ -54,13 +54,13 @@ Those two paths are easy to mix up, so here they are in one place. **Application
 
 Also: a ClusterIP on this network is not private just because Kubernetes called it internal. BGP puts it on the LAN. The Tailscale subnet router can put the same ranges on the tailnet. If I need a lock, I put it on the Gateway or in policy, not in the service type.
 
-## The origin I actually needed
+## The warehouse
 
 Garage is the object store. I wanted buckets, access keys, and nodes to be files in git, federated across the three sites, with a gateway that keeps its identity when a pod restarts. Upstream Garage is a binary and a layout you edit by hand. That is fine for one box. It is a bad interface for Flux and for agents that open pull requests.
 
 So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator). One `GarageCluster` per site, zone named after the city, replication factor 3. Applications talk to a local gateway, not to a disk. If the local disks are gone but the network is up, the gateway can still read from another site. That is a different failure than "the whole city disappeared," and I am not going to pretend I have exercised every combination in anger. I have exercised the operator enough to keep running it.
 
-Rook-Ceph is still the block layer in Ottawa and Robbinsdale. Garage did not replace it. Ceph is disks for databases and PVCs. Garage is S3 for WAL, images, snapshots, and anything else that should exist in more than one city.
+Rook-Ceph is still the block layer in Ottawa and Robbinsdale. Garage did not replace it. Ceph is disks for databases and PVCs. Garage is S3 for WAL, images, snapshots, and anything else the keiretsu should still have if one city has a bad day.
 
 Git holds the declarations: the cluster CR, the bucket, the key. The bytes live in Garage. If I write "if it is not in git, it does not last," I mean the *shape* of the system. The data has a different home.
 
@@ -88,6 +88,6 @@ That is a narrower guarantee than "the company only changes when I merge." Produ
 
 Postgres is the same split as everything else. The cluster definition is in git. WAL and base backups go to Garage. A PVC is not backed up because a cronjob is green. It is backed up when I have restored it onto a new volume and the thing came back. I have been burned by the other kind of backup.
 
-You can rent a coding agent, a GPU, and a sandbox. I do. I also run my own, because I wanted the placement rule, the doors, and the origin to be mine. garage-operator is the piece I could not rent in a shape I would merge.
+You can rent a coding agent, a GPU, and a sandbox. I do. I also run my own, because I wanted the placement rule, the doors, and the warehouse to be mine. garage-operator is the piece I could not rent in a shape I would merge.
 
 The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the wiring. This is what the 2024 lab turned into once "where does this run" stopped being obvious.
