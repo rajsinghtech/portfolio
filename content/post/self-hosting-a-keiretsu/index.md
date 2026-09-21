@@ -70,15 +70,17 @@ Logs follow the same gravity. They are collected everywhere and stored in Ottawa
 
 ## The warehouse
 
-Garage is the object store. I wanted buckets, access keys, and nodes to be files in git, federated across the three sites, with a gateway that keeps its identity when a pod restarts. Upstream Garage is a binary and a layout you edit by hand. That is fine for one box. It is a bad interface for Flux and for agents that open pull requests.
+[Garage](https://garagehq.deuxfleurs.fr/) is S3 for several buildings, not one data center. Deuxfleurs built it so a co-op could keep objects in more than one place without pretending they had a SAN. Zones, replication factor, a gateway in front of local disks. That is already the keiretsu: three houses, copies of the bytes, nobody talking to a disk in another city on the hot path.
 
-So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator). One `GarageCluster` per site, zone named after the city, replication factor 3. Applications talk to a local gateway, not to a disk. If the local disks are gone but the network is up, the gateway can still read from another site. That is a different failure than "the whole city disappeared," and I am not going to pretend I have exercised every combination in anger. I have exercised the operator enough to keep running it.
+The thinking is almost boring once you see it. An app in Ottawa speaks S3 to a gateway in Ottawa. That gateway reads and writes local disks when it can, and the cluster copies blocks to Luke's and Karthik's in the background until there are three. If Ottawa's disks are unhappy but the hallway is up, the same gateway can still fetch a copy from another house. That is a different failure than "the city vanished." I have not dramatized every combination. I have run it long enough to keep it.
 
-Rook-Ceph is still the block layer in Ottawa and Robbinsdale. Garage did not replace it. Ceph is disks for databases and PVCs. Garage is S3 for WAL, images, snapshots, and anything else the keiretsu should still have if one city has a bad day.
+What was *not* boring was operations. Upstream Garage is a binary and a layout file you edit by hand. Fine for one box. A bad interface for [Flux](https://fluxcd.io/) and for agents that open pull requests. I wanted a bucket to be a merge, a key to be a merge, a node to be a merge. So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator). `GarageCluster`, `GarageBucket`, `GarageKey`. One cluster CR per house, zone named after the city, replication factor 3. We still maintain it because this estate is the reason it exists.
 
-Git holds the declarations: the cluster CR, the bucket, the key. The bytes live in Garage. If I write "if it is not in git, it does not last," I mean the *shape* of the system. The data has a different home.
+After that, Garage is the most trivial service in the keiretsu. It uses the same hallway as the model and the metrics. Apps already speak S3. Git already holds the CR. Flux already applies it. There is no extra VPN, no AWS account, no special network just for objects. The operator is the only new piece, and the point of the operator was to make the rest look like everything else.
 
-![Distributed S3](garage.svg)
+[Rook-Ceph](https://rook.io/) is still the block layer in Ottawa and Robbinsdale. Garage did not replace it. Ceph is disks for databases and volumes. Garage is objects: Postgres WAL, container images, Mimir blocks, volume snapshots, anything the three houses should still have if one of us has a bad day. Git is the shape. Garage is the bytes.
+
+![How Garage sits in the three houses](garage.svg)
 
 ## Who is allowed to ask
 

@@ -1,37 +1,53 @@
 digraph garage {
   graph [
-    rankdir=LR, splines=spline, bgcolor="transparent",
-    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.45, ranksep=0.8,
-    fontcolor="#e8e8e8"
+    rankdir=TB, splines=spline, bgcolor="transparent",
+    fontname="Helvetica", fontsize=13, pad=0.45, nodesep=0.7, ranksep=0.5,
+    fontcolor="#e8e8e8", newrank=true
   ];
-  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
-        fillcolor="#2a2a2a", color="#5dba5d", fontcolor="#e8e8e8", margin="0.22,0.14"];
-  edge [fontname="Helvetica", fontsize=10, color="#c8c8c8", fontcolor="#b8b8b8", arrowsize=0.7];
+  node [fontname="Helvetica", fontsize=13, shape=box, style="filled,rounded",
+        fillcolor="#2a2a2a", color="#5dba5d", fontcolor="#e8e8e8", margin="0.24,0.14"];
+  edge [fontname="Helvetica", fontsize=11, color="#c8c8c8", fontcolor="#b8b8b8", arrowsize=0.7];
 
-  op [
-    label="garage-operator\nGarageCluster  ·  GarageBucket  ·  GarageKey",
-    fillcolor="#1e3a24", color="#5dba5d", penwidth=1.6
+  git [
+    label="git  ·  a merge is the layout",
+    fillcolor="#1e3a24", color="#5dba5d", penwidth=1.8
+  ];
+  op [label="garage-operator"];
+  git -> op;
+
+  ot_app [label="Ottawa apps"];
+  rb_app [label="Luke's apps"];
+  sp_app [label="Karthik's apps"];
+  { rank=same; ot_app; rb_app; sp_app; }
+
+  ot_gw [label="Ottawa gateway"];
+  rb_gw [label="Luke gateway"];
+  sp_gw [label="Karthik gateway"];
+  { rank=same; ot_gw; rb_gw; sp_gw; }
+
+  ot_d [label="disks"];
+  rb_d [label="disks"];
+  sp_d [label="disks"];
+  { rank=same; ot_d; rb_d; sp_d; }
+
+  copies [
+    label="three copies  ·  same hallway as the model",
+    fillcolor="#1e3a24", color="#5dba5d", penwidth=1.8
   ];
 
-  subgraph cluster_estate {
-    label="one S3 estate";
-    style="rounded,filled"; fillcolor="#222222"; color="#5dba5d"; fontsize=12; fontcolor="#e8e8e8";
-    ot [label="Ottawa zone"];
-    rb [label="Robbinsdale zone"];
-    sp [label="St. Petersburg zone"];
-    ot -> rb [dir=both, label="RPC"];
-    ot -> sp [dir=both, label="RPC"];
-    rb -> sp [dir=both, label="RPC"];
-  }
+  op -> ot_app;
+  op -> rb_app;
+  op -> sp_app;
 
-  gw [
-    label="local gateway\napps talk here, not to disks",
-    fillcolor="#1e3a24", color="#5dba5d", penwidth=1.6
-  ];
+  ot_app -> ot_gw [label="S3"];
+  rb_app -> rb_gw [label="S3"];
+  sp_app -> sp_gw [label="S3"];
 
-  op -> ot;
-  op -> rb;
-  op -> sp;
-  ot -> gw;
-  sp -> gw;
+  ot_gw -> ot_d;
+  rb_gw -> rb_d;
+  sp_gw -> sp_d;
+
+  ot_d -> copies;
+  rb_d -> copies;
+  sp_d -> copies;
 }
