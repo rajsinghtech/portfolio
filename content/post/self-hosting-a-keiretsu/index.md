@@ -1,6 +1,6 @@
 ---
 title: Self-Hosting a Keiretsu
-description: Three affiliated sites I actually run — where work goes, how it stays put, and who is allowed in
+description: Three houses — mine, Karthik's, and Luke's — where work goes, how it stays put, and who is allowed in
 slug: self-hosting-a-keiretsu
 date: 2026-09-18 00:00:00+0000
 image: cover.png
@@ -26,19 +26,19 @@ A couple years ago I wrote about my [homelab cluster framework](/p/cluster-frame
 
 A coding agent opening a pull request, a model answering a prompt, Postgres keeping WAL, and Home Assistant watching the house are not the same job. I used to pile them onto one cluster because that is what a homelab does. It got crowded, and the blast radius got stupid. So I split the work across three sites and I treat that split as the control plane. Not a fancy scheduler. A rule I can point at: this kind of work runs here, that kind of work runs there, and git is how I say so.
 
-The right name for that is not a CDN. I do not have a dozen equivalent edges caching the same object. I have affiliated sites that share an origin, a network, and a set of doors, and they are deliberately *not* copies of each other. That is a **keiretsu**: a group of companies that stay separate on purpose and still operate as one. Ottawa writes. Robbinsdale keeps the house. St. Petersburg thinks. Garage is the warehouse they all use. I am not claiming I reinvented Japanese industrial policy. I am saying this is closer to how the thing actually behaves than "AI CDN" ever was.
+The right name for that is not a CDN. I do not have a dozen equivalent edges caching the same object. I have three houses that share an origin, a network, and a set of doors, and they are deliberately *not* copies of each other. Mine, Karthik's, and Luke's. That is a **keiretsu** in the only sense I mean it: affiliated, separate on purpose, still one thing. Ottawa writes. Robbinsdale keeps the house. St. Petersburg thinks. Garage is the warehouse we all use.
 
-I run this myself. When I say "we" later, I mean the garage-operator project I maintain, not a staffed conglomerate.
+When I say "we" later I usually mean the garage-operator project I maintain. Sometimes I mean the three of us, because the hardware lives in our living rooms, not in a colo with a badge reader.
 
 The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
 
 ## Where work goes today
 
-**Ottawa** is where I change the system. Git, login, dashboards, agent workspaces. If Ottawa is down, Robbinsdale and St. Petersburg keep their running pods. I cannot ship a change, and I cannot log in from the usual front door. That is an observed shape, not a slogan: headquarters is the writer, not the only survivor.
+**Ottawa** is my house, and it is where I change the system. Git, login, dashboards, agent workspaces. If Ottawa is down, Robbinsdale and St. Petersburg keep their running pods. I cannot ship a change, and I cannot log in from the usual front door. Headquarters is the writer, not the only survivor.
 
-**Robbinsdale** is the house. Home Assistant, media, a second copy of family files. I do not put coding agents there. The house is not a factory, and I do not want an agent session on the same site as the cameras.
+**Robbinsdale** is Luke's house. Home Assistant, media, a second copy of family files. I do not put coding agents there. That is someone else's home, and I do not want an agent session on the same site as the cameras.
 
-**St. Petersburg** is where the GPUs are. Two machines, one model serving process. Ottawa applications reach that process over the site-to-site network, pod to pod. I do not send model traffic out to the public internet, and I do not send it through Tailscale. Git does not live here on purpose. A GPU site that is also headquarters is one afternoon away from being both dumb and unreachable.
+**St. Petersburg** is Karthik's, and it is where the GPUs are. Two machines, one model serving process. Ottawa applications reach that process over the site-to-site network, pod to pod. I do not send model traffic out to the public internet, and I do not send it through Tailscale. Git does not live here on purpose. A GPU site that is also headquarters is one afternoon away from being both dumb and unreachable.
 
 ![Ottawa, Robbinsdale, and St. Petersburg](sites.png)
 
