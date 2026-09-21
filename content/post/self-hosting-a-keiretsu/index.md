@@ -54,6 +54,16 @@ Those two paths are easy to mix up, so here they are in one place. **Application
 
 Also: a ClusterIP on this network is not private just because Kubernetes called it internal. BGP puts it on the LAN. The Tailscale subnet router can put the same ranges on the tailnet. If I need a lock, I put it on the Gateway or in policy, not in the service type.
 
+## Watching the other two cities
+
+Split the work and you immediately have a second problem: you cannot SSH around hoping to notice. Each site runs Prometheus as a forwarder. It scrapes what is local, stamps a `cluster` label so the three cities do not smear into one timeseries, and remote-writes east-west into **Mimir** in Ottawa. Mimir is the long-term store. The blocks land in Garage. Grafana in Ottawa is where I actually look; the other two sites do not get their own dashboard island.
+
+That path is the same hallway as the model. Robbinsdale does not Tailscale its metrics to me. St. Petersburg does not dump GPU stats onto the public internet. If Ottawa is down I lose the long view. Local Prometheus still has a short window, which is enough to see that the house is on fire and not enough to ask what last Tuesday looked like. I picked that. Putting a Mimir in every city would mean three warehouses for numbers I already replicate as objects.
+
+Logs follow the same gravity. They are collected everywhere and stored in Ottawa. Metrics, logs, WAL, snapshots: if it has to survive a site, it goes through the warehouse. If it is only useful where it happened, it stays there.
+
+![Telemetry east-west](telemetry.svg)
+
 ## The warehouse
 
 Garage is the object store. I wanted buckets, access keys, and nodes to be files in git, federated across the three sites, with a gateway that keeps its identity when a pod restarts. Upstream Garage is a binary and a layout you edit by hand. That is fine for one box. It is a bad interface for Flux and for agents that open pull requests.

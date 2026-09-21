@@ -1,0 +1,31 @@
+digraph telemetry {
+  graph [
+    rankdir=LR, splines=spline, bgcolor="transparent",
+    fontname="Helvetica", fontsize=12, pad=0.28, nodesep=0.45, ranksep=0.75,
+    fontcolor="#e8e8e8"
+  ];
+  node [fontname="Helvetica", fontsize=12, shape=box, style="filled,rounded",
+        fillcolor="#2a2a2a", color="#5dba5d", fontcolor="#e8e8e8", margin="0.22,0.14"];
+  edge [fontname="Helvetica", fontsize=10, color="#c8c8c8", fontcolor="#b8b8b8", arrowsize=0.7];
+
+  subgraph cluster_sites {
+    label="each site scrapes itself";
+    style="rounded,filled"; fillcolor="#222222"; color="#5dba5d"; fontsize=12; fontcolor="#e8e8e8";
+    ot [label="Ottawa\nPrometheus"];
+    rb [label="Robbinsdale\nPrometheus"];
+    sp [label="St. Petersburg\nPrometheus"];
+  }
+
+  mimir [
+    label="Ottawa Mimir\nthe long-term store",
+    fillcolor="#1e3a24", color="#5dba5d", penwidth=1.6
+  ];
+  garage [
+    label="Garage\nwhere the blocks live"
+  ];
+
+  ot -> mimir [label="east-west"];
+  rb -> mimir [label="east-west"];
+  sp -> mimir [label="east-west"];
+  mimir -> garage;
+}
