@@ -1,6 +1,6 @@
 ---
 title: Self-Hosting a Keiretsu
-description: Three houses — mine, Karthik's, and Luke's — where work goes, how it stays put, and who is allowed in
+description: A keiretsu is not one company with three offices. It is independent houses that share a warehouse, a network, and a rule about where work belongs.
 slug: self-hosting-a-keiretsu
 date: 2026-09-18 00:00:00+0000
 image: cover.png
@@ -24,9 +24,11 @@ draft: false
 
 A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). That was how I ran Kubernetes at home: distribution, CNI, storage, GitOps, the usual tour. I still run the same kind of thing. The question that actually eats my time now is simpler and worse: **where does this work belong.**
 
-A coding agent opening a pull request, a model answering a prompt, Postgres keeping WAL, and Home Assistant watching the house are not the same job. I used to pile them onto one cluster because that is what a homelab does. It got crowded, and the blast radius got stupid. So I split the work across three sites and I treat that split as the control plane. Not a fancy scheduler. A rule I can point at: this kind of work runs here, that kind of work runs there, and git is how I say so.
+A [keiretsu](https://en.wikipedia.org/wiki/Keiretsu) (系列) is a Japanese business group. After World War II the occupation broke up the family *zaibatsu* — Mitsubishi, Mitsui, Sumitomo as one holding company with a clan at the top. What grew back was not one corporation with divisions. It was **independent companies that stayed legally separate** and still operated as a group: they traded with each other first, they shared a main bank, they sat in a presidents' club, they sometimes owned slivers of each other. Mitsubishi Heavy and Mitsubishi Bank are not branch offices of the same firm. They are allies. Toyota and its suppliers are the vertical version of the same idea: one manufacturer, a web of firms that are not "IT" or "HR," they are their own companies, and the cars still get built.
 
-The right name for that is not a CDN. I do not have a dozen equivalent edges caching the same object. I have three houses that share an origin, a network, and a set of doors, and they are deliberately *not* copies of each other. Mine, Karthik's, and Luke's. That is a **keiretsu** in the only sense I mean it: affiliated, separate on purpose, still one thing. Ottawa writes. Robbinsdale keeps the house. St. Petersburg thinks. Garage is the warehouse the three houses share.
+That is the corporation we built. Not a startup in one cloud account. Not a homelab with extra YAML. Three houses — mine, Karthik's, and Luke's — that do not report to a holding company and still share a warehouse, a network, and a rule about where work goes. Ottawa writes. Robbinsdale keeps the house. St. Petersburg thinks. Nobody owns Luke's cameras. Nobody runs the GPUs as a department of Ottawa. Git is the presidents' club: if it is not in the repo, the group did not agree to it.
+
+A coding agent opening a pull request, a model answering a prompt, Postgres keeping history, and Home Assistant watching the house are not the same job. I used to pile them onto one cluster because that is what a homelab does. It got crowded, and the blast radius got stupid. So the work is split the way a keiretsu splits it: this kind of work runs here, that kind of work runs there. I say so in git. That is the control plane. Not a fancy scheduler. A placement rule plus a network that makes the placement real.
 
 The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
 
