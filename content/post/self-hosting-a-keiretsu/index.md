@@ -36,7 +36,7 @@ The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-
 
 A site is a failure domain you chose. A footprint is what is actually in the room: CPU, disk, GPU, or “please do not wake the house.” Placement is a file in git that says this workload runs on that site. No file, it does not run there. I have not built a runtime that picks a site for an agent. “Scheduling control plane” here means the placement rule plus the network that makes the placement reachable.
 
-The cool part is the inverse. Because the app is defined once and the site is just a pointer, **most of the infrastructure can walk**. Move the pointer from Karthik’s tree to Luke’s, merge, and Flux stands it up on the other side of the hallway. Same warehouse, same network, same doors. You are not rebuilding a snowflake. Work that *is* the footprint stays put — GPUs stay on GPU machines, cameras stay in the house — but everything else is portable across the keiretsu on purpose. That is the point of treating sites as a domain instead of three pets.
+The cool part is the inverse. Because the app is defined once and the site is just a pointer, **most of the infrastructure can walk**. Move the pointer from Karthik’s tree to Luke’s, merge, and Flux stands it up on the other side of the hallway. Same warehouse, same network, same doors. You are not rebuilding a snowflake. Work that *is* the footprint stays put — GPUs stay on GPU machines, cameras stay in the house — but everything else is portable across the keiretsu on purpose: apps, dashboards, even the collectors that ship metrics and logs. That is the point of treating sites as a domain instead of three pets.
 
 **Writer site.** Git, login, dashboards, agent workspaces. The place you change the system. Needs ordinary compute and to stay reachable. If it is down, the other sites keep their pods; you just cannot ship. Ours is Karthik’s house in Ottawa.
 
@@ -54,7 +54,7 @@ Start with the houses. Each site has a [UniFi](https://www.ui.com/) gateway — 
 
 On top of that, each house runs Kubernetes. [Cilium](https://cilium.io/) is the [CNI](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/): the thing that gives every pod an IP and decides how those IPs route. Cilium speaks [BGP](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) to the *local* UniFi gateway — I wrote the [one-cluster version of that](/p/cilium-unifi/) when this was still a homelab. In practice: the router learns "these pod and service addresses live behind me." Do that at all three houses, and the mesh already knows how to forward.
 
-[ClusterMesh](https://docs.cilium.io/en/stable/network/clustermesh/intro/) is the last hop of that idea. It is how a Service at the writer site can have backends at the GPU site. No extra proxy. A pod calls a DNS name, and the packet goes to the other house the same way it would go to another pod in the same cluster. That is the hallway. Garage replication uses it. CI borrowing a machine at Luke’s uses it. Prometheus remote-write uses it. The mixed hardware only works if the hallway does not care what the box is.
+[ClusterMesh](https://docs.cilium.io/en/stable/network/clustermesh/intro/) is the last hop of that idea. It is how a Service at the writer site can have backends at the GPU site. No extra proxy. A pod calls a DNS name, and the packet goes to the other house the same way it would go to another pod in the same cluster. That is the hallway. Garage replication uses it. CI borrowing a machine at Luke’s uses it. Metrics and logs use it. The mixed hardware only works if the hallway does not care what the box is.
 
 [Tailscale](https://tailscale.com/) is not that hallway. Tailscale is how *I* get in: laptop, phone, [`kubectl`](https://kubernetes.io/docs/reference/kubectl/). I used to send cluster-to-cluster traffic over Tailscale too. [I wrote that up](/p/tailscale-operator/). Once the UniFi mesh was solid, it was the slower path for the work, so I stopped using it as the backbone. People still join that way. Workloads do not.
 
@@ -62,13 +62,15 @@ The language-model path is the one that confuses people, so here it is without t
 
 One more thing LinkedIn-Kubernetes will get wrong. A [ClusterIP](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) is not private just because the docs say internal. BGP puts that address on the LAN. A Tailscale [subnet router](https://tailscale.com/kb/1019/subnets) can put the same ranges on the tailnet. If I need a lock, I put it on a [Gateway](https://gateway-api.sigs.k8s.io/) or in policy, not in the Service type.
 
-## Watching the other two cities
+## Watching the other sites
 
-Split the work and you immediately have a second problem: you cannot SSH around hoping to notice. Each site runs [Prometheus](https://prometheus.io/) as a forwarder. It scrapes what is local, stamps a `cluster` label so the three sites do not smear into one timeseries, and remote-writes east-west into [Mimir](https://grafana.com/oss/mimir/) in Ottawa. Mimir is the long-term store. The blocks land in Garage. [Grafana](https://grafana.com/oss/grafana/) in Ottawa is where I actually look; the other two sites do not get their own dashboard island.
+Split the work and you immediately have a second problem: you cannot SSH around hoping to notice. Each site runs [Prometheus](https://prometheus.io/) as a forwarder. It scrapes what is local, stamps a `cluster` label so the three sites do not smear into one timeseries, and remote-writes east-west into [Mimir](https://grafana.com/oss/mimir/) at the writer site. Mimir is the long-term store. The blocks land in Garage.
 
-That path is the same hallway as the model. Robbinsdale does not Tailscale its metrics to me. St. Petersburg does not dump GPU stats onto the public internet. If Ottawa is down I lose the long view. Local Prometheus still has a short window, which is enough to see that the house is on fire and not enough to ask what last Tuesday looked like. I picked that. Putting a Mimir in every city would mean three warehouses for numbers I already replicate as objects.
+Logs are the same hallway, not a side channel. Each site ships them east-west into [VictoriaLogs](https://docs.victoriametrics.com/victorialogs/) at the writer site. Same `cluster` label, same rule: scrape where it happened, keep the long copy where you look. [Grafana](https://grafana.com/oss/grafana/) is only at the writer site. The other two do not get their own dashboard island.
 
-Logs follow the same gravity. They are collected everywhere and stored in Ottawa. Metrics, logs, WAL, snapshots: if it has to survive a site, it goes through the warehouse. If it is only useful where it happened, it stays there.
+Robbinsdale does not Tailscale its metrics or logs to me. St. Petersburg does not dump GPU stats onto the public internet. If the writer site is down I lose the long view. Local Prometheus still has a short window, which is enough to see that the house is on fire and not enough to ask what last Tuesday looked like. I picked that. Putting a Mimir and a log store in every site would mean three warehouses for numbers I already replicate as objects.
+
+Metrics, logs, WAL, snapshots: if it has to survive a site, it goes through the warehouse. If it is only useful where it happened, it stays there.
 
 ![Telemetry east-west](telemetry.svg)
 

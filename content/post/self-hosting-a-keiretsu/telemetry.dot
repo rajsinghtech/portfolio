@@ -11,21 +11,21 @@ digraph telemetry {
   subgraph cluster_sites {
     label="each site scrapes itself";
     style="rounded,filled"; fillcolor="#222222"; color="#5dba5d"; fontsize=12; fontcolor="#e8e8e8";
-    ot [label="Ottawa\nPrometheus"];
-    rb [label="Robbinsdale\nPrometheus"];
-    sp [label="St. Petersburg\nPrometheus"];
+    ot [label="Karthik\nmetrics + logs"];
+    rb [label="Luke\nmetrics + logs"];
+    sp [label="Raj\nmetrics + logs"];
   }
 
-  mimir [
-    label="Ottawa Mimir\nthe long-term store",
+  store [
+    label="writer site\nMimir + VictoriaLogs",
     fillcolor="#1e3a24", color="#5dba5d", penwidth=1.6
   ];
   garage [
     label="Garage\nwhere the blocks live"
   ];
 
-  ot -> mimir [label="east-west"];
-  rb -> mimir [label="east-west"];
-  sp -> mimir [label="east-west"];
-  mimir -> garage;
+  ot -> store [label="east-west"];
+  rb -> store [label="east-west"];
+  sp -> store [label="east-west"];
+  store -> garage;
 }
