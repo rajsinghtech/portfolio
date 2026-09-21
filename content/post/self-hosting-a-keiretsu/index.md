@@ -1,6 +1,6 @@
 ---
 title: Self-Hosting a Keiretsu
-description: A framework for several sites, mixed hardware, and AI work that does not all belong in one cluster.
+description: Several sites, mixed hardware, and AI work placed on purpose — three houses that share a warehouse and a network.
 slug: self-hosting-a-keiretsu
 date: 2026-09-18 00:00:00+0000
 image: cover.png
@@ -22,94 +22,80 @@ weight: 1
 draft: false
 ---
 
-A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). That was how I ran Kubernetes at home: distribution, CNI, storage, GitOps, the usual tour. This is the next version of that framework. Not “how to stand up a cluster.” How to **run several sites as one system**, when the hardware is not the same in every room, and when AI work is a first-class thing you place — agents that write, a model that answers — instead of a GPU you bolted onto the side of the homelab.
+A couple years ago I wrote about my [homelab cluster framework](/p/cluster-framework/). How I ran Kubernetes at home: distribution, CNI, storage, GitOps. This is the next version. Several sites as one system. Hardware that does not match. AI work you *place* — agents that write, a model that answers — instead of dumping it all on one box.
 
-A [keiretsu](https://en.wikipedia.org/wiki/Keiretsu) is independent companies that stay separate and still operate as a group. Not one firm with branch offices. Allies that trade with each other first and share a bank. That is the shape: more than one site, a rule about which work lands on which hardware, a private network between them, and a warehouse they share. Git is how the group agrees. If it is not in the repo, it did not happen.
+A [keiretsu](https://en.wikipedia.org/wiki/Keiretsu) is independent companies that stay separate and still operate as a group. Allies that trade with each other first and share a bank. That is the shape: more than one site, a rule about which work lands on which hardware, a private network between them, and a warehouse they share. Git is how the group agrees. If it is not in the repo, it did not happen.
 
-The hardware will not match. One site has disks and quiet machines. One has cameras and a house that has to stay up. One has GPUs and should not also be headquarters. Forcing that onto one cluster is how a homelab gets stupid. The framework is: **name the sites, name the footprints, place the work.**
-
-Ours happens to be three houses. Kartik’s, Luke’s, and mine. They do not report to a holding company. They still share a warehouse, a network, and that placement rule.
+Ours is three houses. Kartik’s in Ottawa, Luke’s in Robbinsdale, mine in St. Petersburg. They are homes. They also hold copies of the same infrastructure so one house going dark is not the whole group going dark. The framework is: **name the sites, name the hardware, place the work.**
 
 The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
 
-## Sites, footprints, placement
+## Sites, hardware, placement
 
-A site is a failure domain you chose. A footprint is what is actually in the room: CPU, disk, GPU, or “please do not wake the house.” Placement is a file in git that says this workload runs on that site. No file, it does not run there. I have not built a runtime that picks a site for an agent. “Scheduling control plane” here means the placement rule plus the network that makes the placement reachable.
+A site is a house we chose to run as a failure domain. The hardware in each room is different: ordinary compute, a lot of disk, GPUs, or a house that has to stay quiet. Placement is a file in git. That file says this workload runs here. No file, it does not run there.
 
-The cool part is the inverse. Because the app is defined once and the site is just a pointer, **most of the infrastructure can walk**. Move the pointer from Kartik’s tree to Luke’s, merge, and Flux stands it up on the other side of the hallway. Same warehouse, same network, same doors. You are not rebuilding a snowflake. Work that *is* the footprint stays put — GPUs stay on GPU machines, cameras stay in the house — but everything else is portable across the keiretsu on purpose: apps, dashboards, even the collectors that ship metrics and logs. That is the point of treating sites as a domain instead of three pets.
+Because the app is defined once and the site is a pointer, **we can move almost anything across the group.** Change which house the pointer names, merge, and [Flux](https://fluxcd.io/) brings it up on the other side. Same warehouse. Same network. That is how disaster recovery works here: the other houses already have the disks, the mesh, and the config. You are not rebuilding from a blog post. The exception is hardware. The model needs GPUs, so it lives at my house. Home Assistant needs Luke’s cameras, so it lives at Luke’s. Everything else can fail over.
 
-**Writer site.** Git, login, dashboards, agent workspaces. The place you change the system. Needs ordinary compute and to stay reachable. If it is down, the other sites keep their pods; you just cannot ship. Ours is Kartik’s house in Ottawa.
+**Ottawa (Kartik)** is where the system gets written. Git, login, dashboards, agent workspaces. Ordinary machines. If that house is down the others keep running; we just cannot ship.
 
-**House site.** Home automation, media, cameras, a second copy of family files. Different hardware, different risk. You do not put coding agents here. Ours is Luke’s house in Robbinsdale.
+**Robbinsdale (Luke)** is the home-automation site. Media, cameras, a second copy of family files.
 
-**Inference site.** GPUs. One model serving process, fat machines, a footprint the other two do not have. Git does not live here on purpose. A GPU site that is also headquarters is one afternoon away from being both dumb and unreachable. Ours is my house in St. Petersburg. Applications at the writer site call the model over the site-to-site network, pod to pod — not the public internet, not Tailscale.
+**St. Petersburg (mine)** is the GPU site. Two machines, one model. Work at Kartik’s calls it over the site-to-site network. Git does not live here. I do not want the writer and the GPUs to die together.
 
-AI development is two placements, not one pile. The *agent* sits at the writer site, in a throwaway VM, and opens a pull request. The *model* sits on the GPU footprint. Mixing those because “we do AI” is how you schedule a sandbox onto the same box that is serving tokens.
+Agents and the model are two placements. The agent runs at the writer site, in a throwaway VM, and opens a pull request. The model runs on the GPUs. They are not the same job.
 
 ![Three sites](sites.png)
 
 ## How the three sites talk
 
-Start with the houses. Each site has a [UniFi](https://www.ui.com/) gateway — the box that is the router for that LAN. Those gateways are meshed, so a packet from Kartik’s, Luke’s, or mine can reach the others without the public internet. That is the underlay. Everything else sits on it. The framework does not care that they are living rooms. It cares that each site has a LAN, a router, and a way to the others.
+Each house has a [UniFi](https://www.ui.com/) gateway. The three gateways are meshed, so the LANs reach each other without the public internet. That is the underlay.
 
-On top of that, each house runs Kubernetes. [Cilium](https://cilium.io/) is the [CNI](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/): the thing that gives every pod an IP and decides how those IPs route. Cilium speaks [BGP](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) to the *local* UniFi gateway — I wrote the [one-cluster version of that](/p/cilium-unifi/) when this was still a homelab. In practice: the router learns "these pod and service addresses live behind me." Do that at all three houses, and the mesh already knows how to forward.
+Each house runs Kubernetes. [Cilium](https://cilium.io/) is the [CNI](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/) — it gives pods IPs. It speaks [BGP](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) to the local UniFi box so the router learns those addresses. I wrote the [one-cluster version](/p/cilium-unifi/) years ago. Do it at all three houses and the mesh already knows how to forward.
 
-[ClusterMesh](https://docs.cilium.io/en/stable/network/clustermesh/intro/) is the last hop of that idea. It is how a Service at the writer site can have backends at the GPU site. No extra proxy. A pod calls a DNS name, and the packet goes to the other house the same way it would go to another pod in the same cluster. That is the hallway. Garage replication uses it. CI borrowing a machine at Luke’s uses it. Metrics and logs use it. The mixed hardware only works if the hallway does not care what the box is.
+[ClusterMesh](https://docs.cilium.io/en/stable/network/clustermesh/intro/) is how a Service at Kartik’s can send traffic to a backend at mine. A pod uses a DNS name. The packet goes to the other house like it was the next rack. Garage copies, CI, metrics, and logs all use that path.
 
-[Tailscale](https://tailscale.com/) is not that hallway. Tailscale is how *I* get in: laptop, phone, [`kubectl`](https://kubernetes.io/docs/reference/kubectl/). I used to send cluster-to-cluster traffic over Tailscale too. [I wrote that up](/p/tailscale-operator/). Once the UniFi mesh was solid, it was the slower path for the work, so I stopped using it as the backbone. People still join that way. Workloads do not.
+People use [Tailscale](https://tailscale.com/). Laptops, phones, [`kubectl`](https://kubernetes.io/docs/reference/kubectl/). I used to send *workload* traffic over Tailscale too ([writeup](/p/tailscale-operator/)). The UniFi mesh is what the clusters use now. Tailscale is still how I log in from outside the house.
 
-The language-model path is the one that confuses people, so here it is without the poetry. The GPUs and the serving process live at my house. Something running at Kartik’s — a workspace, an app, a proxy — calls that process like it was in the next namespace, over ClusterMesh. When I debug from a coffee shop, *I* am not that pod. I hit the API over Tailscale. The public internet is a third caller: it can see a settings page behind login. It cannot send a prompt into the model. Three callers, three doors, one GPU footprint.
+The model lives at my house. An app at Kartik’s calls it over ClusterMesh, same as any other Service. If I am not on that LAN, I use Tailscale to reach the API. The public internet can see a settings page behind login. It cannot send a prompt.
 
-One more thing LinkedIn-Kubernetes will get wrong. A [ClusterIP](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) is not private just because the docs say internal. BGP puts that address on the LAN. A Tailscale [subnet router](https://tailscale.com/kb/1019/subnets) can put the same ranges on the tailnet. If I need a lock, I put it on a [Gateway](https://gateway-api.sigs.k8s.io/) or in policy, not in the Service type.
+A [ClusterIP](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) is on the LAN because BGP put it there. A Tailscale [subnet router](https://tailscale.com/kb/1019/subnets) can put the same ranges on the tailnet. Internal is not a lock. A [Gateway](https://gateway-api.sigs.k8s.io/) or a policy is.
 
 ## Watching the other sites
 
-Split the work and you immediately have a second problem: you cannot SSH around hoping to notice. Each site runs [Prometheus](https://prometheus.io/) as a forwarder. It scrapes what is local, stamps a `cluster` label so the three sites do not smear into one timeseries, and remote-writes east-west into [Mimir](https://grafana.com/oss/mimir/) at the writer site. Mimir is the long-term store. The blocks land in Garage.
+Each site runs [Prometheus](https://prometheus.io/). It scrapes locally, labels the series with the site, and remote-writes into [Mimir](https://grafana.com/oss/mimir/) at Kartik’s. Blocks land in Garage. Logs take the same path into [VictoriaLogs](https://docs.victoriametrics.com/victorialogs/). [Grafana](https://grafana.com/oss/grafana/) is only at the writer site.
 
-Logs are the same hallway, not a side channel. Each site ships them east-west into [VictoriaLogs](https://docs.victoriametrics.com/victorialogs/) at the writer site. Same `cluster` label, same rule: scrape where it happened, keep the long copy where you look. [Grafana](https://grafana.com/oss/grafana/) is only at the writer site. The other two do not get their own dashboard island.
-
-Robbinsdale does not Tailscale its metrics or logs to me. St. Petersburg does not dump GPU stats onto the public internet. If the writer site is down I lose the long view. Local Prometheus still has a short window, which is enough to see that the house is on fire and not enough to ask what last Tuesday looked like. I picked that. Putting a Mimir and a log store in every site would mean three warehouses for numbers I already replicate as objects.
-
-Metrics, logs, WAL, snapshots: if it has to survive a site, it goes through the warehouse. If it is only useful where it happened, it stays there.
+If Kartik’s is down I lose history. Local Prometheus still shows the last few hours. That is enough to see an outage, not enough to graph last month. I do not run a Mimir in every house. Garage already keeps three copies of the blocks.
 
 ![Telemetry east-west](telemetry.svg)
 
 ## The warehouse
 
-[Garage](https://garagehq.deuxfleurs.fr/) is S3 for several buildings, not one data center. Deuxfleurs built it so a co-op could keep objects in more than one place without pretending they had a SAN. Zones, replication factor, a gateway in front of local disks. That is already the keiretsu: three houses, copies of the bytes, nobody talking to a disk in another city on the hot path.
+[Garage](https://garagehq.deuxfleurs.fr/) is S3 for several buildings. An app talks S3 to a gateway in *that* house. Disks are local. Copies go to the other two until there are three. The disks do not have to match. Ours do not.
 
-The thinking is almost boring once you see it. An app speaks S3 to a gateway *in that site*. That gateway reads and writes local disks when it can, and copies blocks to the other sites until there are three. The disks do not have to match. Kartik’s, Luke’s, and mine are different sizes and different machines. Garage does not care. If this site’s disks are unhappy but the hallway is up, the same gateway can still fetch a copy from another house. That is a different failure than “the site vanished.” I have not dramatized every combination. I have run it long enough to keep it.
+Upstream Garage is a binary and a layout file. Fine for one box. A bad fit for Flux and for agents that open pull requests. I wanted a bucket to be a merge. So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator) (`GarageCluster`, `GarageBucket`, `GarageKey`) and I still maintain it. After that, Garage is ordinary: same git, same Flux, same mesh as everything else. No extra network for objects.
 
-What was *not* boring was operations. Upstream Garage is a binary and a layout file you edit by hand. Fine for one box. A bad interface for [Flux](https://fluxcd.io/) and for agents that open pull requests. I wanted a bucket to be a merge, a key to be a merge, a node to be a merge. So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator). `GarageCluster`, `GarageBucket`, `GarageKey`. One cluster CR per house, zone named after the city, replication factor 3. I still maintain it because this estate is the reason it exists.
-
-After that, Garage is the most trivial service in the keiretsu. It uses the same hallway as the model and the metrics. Apps already speak S3. Git already holds the CR. Flux already applies it. There is no extra VPN, no AWS account, no special network just for objects. The operator is the only new piece, and the point of the operator was to make the rest look like everything else.
-
-[Rook-Ceph](https://rook.io/) is still the block layer in Ottawa and Robbinsdale. Garage did not replace it. Ceph is disks for databases and volumes. Garage is objects: Postgres WAL, container images, Mimir blocks, volume snapshots, anything the three houses should still have if one of us has a bad day. Git is the shape. Garage is the bytes.
+[Rook-Ceph](https://rook.io/) is still block storage at Kartik’s and Luke’s. Garage did not replace it. Ceph is volumes and databases. Garage is objects — WAL, images, Mimir blocks, snapshots — the copies we keep so one house having a bad day is not data loss.
 
 ![How Garage sits in the three houses](garage.svg)
 
 ## Who is allowed to ask
 
-Every site has three doors: public internet, house LAN, tailnet. Names that only have a backend in Ottawa stay pinned to Ottawa. I have burned time on "global" names that 404 half the time because the other WAN edge has nothing behind them.
+Every site has three doors: public internet, the house LAN, Tailscale. Names that only exist at Kartik’s stay pinned there. I have shipped “global” names that 404 because the other house had no backend.
 
-The model is the one I care about. The management UI can sit on a public name, behind login. The inference API does not. That work was placed on the GPU site. The internet does not get a seat in that room.
-
-DNS is how a person finds a door. BGP is how a packet finds a backend once it is on the fabric. I pick both of those by hand in git. I do not yet pick an environment for an agent the same way.
+The model API is not on the public internet. The settings UI can be, behind login.
 
 ![Three doors](three-doors.svg)
 
-## A session, not a laptop
+## Agents
 
-Here is the path I actually use. An agent session starts at the writer site, in a Kata VM — its own kernel, thrown away when the session ends. Most sessions cannot join the tailnet. A separate runtime is the only one that gets a TUN, and I treat that as a real permission, not a convenience. The agent can install junk, clone the repo, and open a pull request. Local checks render all three sites before I merge. Flux is the only writer to the clusters. The session can make a mess of its VM. It does not apply YAML to production.
+An agent session starts at Kartik’s, in a [Kata](https://katacontainers.io/) VM. Own kernel. Thrown away when the session ends. Most sessions cannot join Tailscale. The agent clones the repo and opens a pull request. Checks render all three sites. I merge. Flux applies. The VM can catch fire. It does not `kubectl apply` production.
 
-That is a narrower guarantee than "the company only changes when I merge." Production GitOps changes when I merge. A session that was granted tailnet access can still reach whatever that identity can reach *before* a merge. I try not to grant that.
-
-[Pillar's Week of Sandbox Escapes](https://www.pillar.security/blog/the-week-of-sandbox-escapes) (July 2026) is the reason I care about the handshake. Cursor, Codex, and Gemini CLI did not need to break the box. The agent wrote a file — a hook, a git config, a Docker socket — and something trusted on the host ran it later. I do not want my laptop to be that host, and I do not want Flux to be an implicit `eval` of whatever the agent left on disk. Review the diff. Then merge.
+[Pillar](https://www.pillar.security/blog/the-week-of-sandbox-escapes) showed last July that Cursor, Codex, and Gemini CLI did not need to break out of their sandboxes. They wrote a hook or talked to Docker, and the host ran it. I do not want that host to be my laptop, and I do not want Flux to apply whatever landed on disk. Review, then merge.
 
 ![Agent, office, merge](sandbox-merge.svg)
 
-Postgres is the same split as everything else. The cluster definition is in git. WAL and base backups go to Garage. A PVC is not backed up because a cronjob is green. It is backed up when I have restored it onto a new volume and the thing came back. I have been burned by the other kind of backup.
+Postgres is a file in git. WAL goes to Garage. A volume backup is real when I have restored it onto a new disk and the thing came back.
 
-You can rent a coding agent, a GPU, and a sandbox. I do. I also run my own, because I wanted the placement rule, the doors, and the warehouse to be mine. garage-operator is the piece I could not rent in a shape I would merge.
+I rent coding agents and APIs when I need them. I also run this, because I wanted placement, doors, and the warehouse to be ours. garage-operator is the piece I could not rent in a shape I would merge.
 
-The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the wiring. This is what the 2024 lab turned into once "where does this run" stopped being obvious.
+The [manifests](https://github.com/keiretsu-labs/kubernetes-manifests) are the wiring.
