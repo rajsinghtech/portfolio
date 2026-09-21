@@ -29,7 +29,7 @@
 
   <!-- Ottawa -->
   <rect class="card" x="40" y="128" width="280" height="210" rx="14"/>
-  <text class="t" x="180" y="152">Karthik</text>
+  <text class="t" x="180" y="152">Kartik</text>
   <rect class="box" x="70" y="164" width="220" height="36" rx="10"/>
   <text class="ts" x="180" y="187">apps</text>
   <text class="label" x="180" y="214">S3</text>
@@ -53,7 +53,7 @@
   <rect class="box" x="430" y="286" width="220" height="36" rx="10"/>
   <text class="ts" x="540" y="309">disks</text>
 
-  <!-- Karthik -->
+  <!-- Kartik -->
   <rect class="card" x="760" y="128" width="280" height="210" rx="14"/>
   <text class="t" x="900" y="152">Raj</text>
   <rect class="box" x="790" y="164" width="220" height="36" rx="10"/>

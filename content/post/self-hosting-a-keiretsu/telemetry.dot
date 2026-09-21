@@ -11,7 +11,7 @@ digraph telemetry {
   subgraph cluster_sites {
     label="each site scrapes itself";
     style="rounded,filled"; fillcolor="#222222"; color="#5dba5d"; fontsize=12; fontcolor="#e8e8e8";
-    ot [label="Karthik\nmetrics + logs"];
+    ot [label="Kartik\nmetrics + logs"];
     rb [label="Luke\nmetrics + logs"];
     sp [label="Raj\nmetrics + logs"];
   }

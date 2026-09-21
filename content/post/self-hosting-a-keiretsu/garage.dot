@@ -17,12 +17,12 @@ digraph garage {
 
   ot_app [label="Ottawa apps"];
   rb_app [label="Luke's apps"];
-  sp_app [label="Karthik's apps"];
+  sp_app [label="Kartik's apps"];
   { rank=same; ot_app; rb_app; sp_app; }
 
   ot_gw [label="Ottawa gateway"];
   rb_gw [label="Luke gateway"];
-  sp_gw [label="Karthik gateway"];
+  sp_gw [label="Kartik gateway"];
   { rank=same; ot_gw; rb_gw; sp_gw; }
 
   ot_d [label="disks"];

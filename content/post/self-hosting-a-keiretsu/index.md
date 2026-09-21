@@ -28,7 +28,7 @@ A [keiretsu](https://en.wikipedia.org/wiki/Keiretsu) is independent companies th
 
 The hardware will not match. One site has disks and quiet machines. One has cameras and a house that has to stay up. One has GPUs and should not also be headquarters. Forcing that onto one cluster is how a homelab gets stupid. The framework is: **name the sites, name the footprints, place the work.**
 
-Ours happens to be three houses. Karthik’s, Luke’s, and mine. They do not report to a holding company. They still share a warehouse, a network, and that placement rule.
+Ours happens to be three houses. Kartik’s, Luke’s, and mine. They do not report to a holding company. They still share a warehouse, a network, and that placement rule.
 
 The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
 
@@ -36,9 +36,9 @@ The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-
 
 A site is a failure domain you chose. A footprint is what is actually in the room: CPU, disk, GPU, or “please do not wake the house.” Placement is a file in git that says this workload runs on that site. No file, it does not run there. I have not built a runtime that picks a site for an agent. “Scheduling control plane” here means the placement rule plus the network that makes the placement reachable.
 
-The cool part is the inverse. Because the app is defined once and the site is just a pointer, **most of the infrastructure can walk**. Move the pointer from Karthik’s tree to Luke’s, merge, and Flux stands it up on the other side of the hallway. Same warehouse, same network, same doors. You are not rebuilding a snowflake. Work that *is* the footprint stays put — GPUs stay on GPU machines, cameras stay in the house — but everything else is portable across the keiretsu on purpose: apps, dashboards, even the collectors that ship metrics and logs. That is the point of treating sites as a domain instead of three pets.
+The cool part is the inverse. Because the app is defined once and the site is just a pointer, **most of the infrastructure can walk**. Move the pointer from Kartik’s tree to Luke’s, merge, and Flux stands it up on the other side of the hallway. Same warehouse, same network, same doors. You are not rebuilding a snowflake. Work that *is* the footprint stays put — GPUs stay on GPU machines, cameras stay in the house — but everything else is portable across the keiretsu on purpose: apps, dashboards, even the collectors that ship metrics and logs. That is the point of treating sites as a domain instead of three pets.
 
-**Writer site.** Git, login, dashboards, agent workspaces. The place you change the system. Needs ordinary compute and to stay reachable. If it is down, the other sites keep their pods; you just cannot ship. Ours is Karthik’s house in Ottawa.
+**Writer site.** Git, login, dashboards, agent workspaces. The place you change the system. Needs ordinary compute and to stay reachable. If it is down, the other sites keep their pods; you just cannot ship. Ours is Kartik’s house in Ottawa.
 
 **House site.** Home automation, media, cameras, a second copy of family files. Different hardware, different risk. You do not put coding agents here. Ours is Luke’s house in Robbinsdale.
 
@@ -50,7 +50,7 @@ AI development is two placements, not one pile. The *agent* sits at the writer s
 
 ## How the three sites talk
 
-Start with the houses. Each site has a [UniFi](https://www.ui.com/) gateway — the box that is the router for that LAN. Those gateways are meshed, so a packet from Karthik’s, Luke’s, or mine can reach the others without the public internet. That is the underlay. Everything else sits on it. The framework does not care that they are living rooms. It cares that each site has a LAN, a router, and a way to the others.
+Start with the houses. Each site has a [UniFi](https://www.ui.com/) gateway — the box that is the router for that LAN. Those gateways are meshed, so a packet from Kartik’s, Luke’s, or mine can reach the others without the public internet. That is the underlay. Everything else sits on it. The framework does not care that they are living rooms. It cares that each site has a LAN, a router, and a way to the others.
 
 On top of that, each house runs Kubernetes. [Cilium](https://cilium.io/) is the [CNI](https://kubernetes.io/docs/concepts/extend-kubernetes/compute-storage-net/network-plugins/): the thing that gives every pod an IP and decides how those IPs route. Cilium speaks [BGP](https://www.cloudflare.com/learning/security/glossary/what-is-bgp/) to the *local* UniFi gateway — I wrote the [one-cluster version of that](/p/cilium-unifi/) when this was still a homelab. In practice: the router learns "these pod and service addresses live behind me." Do that at all three houses, and the mesh already knows how to forward.
 
@@ -58,7 +58,7 @@ On top of that, each house runs Kubernetes. [Cilium](https://cilium.io/) is the 
 
 [Tailscale](https://tailscale.com/) is not that hallway. Tailscale is how *I* get in: laptop, phone, [`kubectl`](https://kubernetes.io/docs/reference/kubectl/). I used to send cluster-to-cluster traffic over Tailscale too. [I wrote that up](/p/tailscale-operator/). Once the UniFi mesh was solid, it was the slower path for the work, so I stopped using it as the backbone. People still join that way. Workloads do not.
 
-The language-model path is the one that confuses people, so here it is without the poetry. The GPUs and the serving process live at my house. Something running at Karthik’s — a workspace, an app, a proxy — calls that process like it was in the next namespace, over ClusterMesh. When I debug from a coffee shop, *I* am not that pod. I hit the API over Tailscale. The public internet is a third caller: it can see a settings page behind login. It cannot send a prompt into the model. Three callers, three doors, one GPU footprint.
+The language-model path is the one that confuses people, so here it is without the poetry. The GPUs and the serving process live at my house. Something running at Kartik’s — a workspace, an app, a proxy — calls that process like it was in the next namespace, over ClusterMesh. When I debug from a coffee shop, *I* am not that pod. I hit the API over Tailscale. The public internet is a third caller: it can see a settings page behind login. It cannot send a prompt into the model. Three callers, three doors, one GPU footprint.
 
 One more thing LinkedIn-Kubernetes will get wrong. A [ClusterIP](https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types) is not private just because the docs say internal. BGP puts that address on the LAN. A Tailscale [subnet router](https://tailscale.com/kb/1019/subnets) can put the same ranges on the tailnet. If I need a lock, I put it on a [Gateway](https://gateway-api.sigs.k8s.io/) or in policy, not in the Service type.
 
@@ -78,7 +78,7 @@ Metrics, logs, WAL, snapshots: if it has to survive a site, it goes through the 
 
 [Garage](https://garagehq.deuxfleurs.fr/) is S3 for several buildings, not one data center. Deuxfleurs built it so a co-op could keep objects in more than one place without pretending they had a SAN. Zones, replication factor, a gateway in front of local disks. That is already the keiretsu: three houses, copies of the bytes, nobody talking to a disk in another city on the hot path.
 
-The thinking is almost boring once you see it. An app speaks S3 to a gateway *in that site*. That gateway reads and writes local disks when it can, and copies blocks to the other sites until there are three. The disks do not have to match. Karthik’s, Luke’s, and mine are different sizes and different machines. Garage does not care. If this site’s disks are unhappy but the hallway is up, the same gateway can still fetch a copy from another house. That is a different failure than “the site vanished.” I have not dramatized every combination. I have run it long enough to keep it.
+The thinking is almost boring once you see it. An app speaks S3 to a gateway *in that site*. That gateway reads and writes local disks when it can, and copies blocks to the other sites until there are three. The disks do not have to match. Kartik’s, Luke’s, and mine are different sizes and different machines. Garage does not care. If this site’s disks are unhappy but the hallway is up, the same gateway can still fetch a copy from another house. That is a different failure than “the site vanished.” I have not dramatized every combination. I have run it long enough to keep it.
 
 What was *not* boring was operations. Upstream Garage is a binary and a layout file you edit by hand. Fine for one box. A bad interface for [Flux](https://fluxcd.io/) and for agents that open pull requests. I wanted a bucket to be a merge, a key to be a merge, a node to be a merge. So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator). `GarageCluster`, `GarageBucket`, `GarageKey`. One cluster CR per house, zone named after the city, replication factor 3. I still maintain it because this estate is the reason it exists.
 
