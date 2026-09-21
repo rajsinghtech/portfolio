@@ -26,9 +26,7 @@ A couple years ago I wrote about my [homelab cluster framework](/p/cluster-frame
 
 A coding agent opening a pull request, a model answering a prompt, Postgres keeping WAL, and Home Assistant watching the house are not the same job. I used to pile them onto one cluster because that is what a homelab does. It got crowded, and the blast radius got stupid. So I split the work across three sites and I treat that split as the control plane. Not a fancy scheduler. A rule I can point at: this kind of work runs here, that kind of work runs there, and git is how I say so.
 
-The right name for that is not a CDN. I do not have a dozen equivalent edges caching the same object. I have three houses that share an origin, a network, and a set of doors, and they are deliberately *not* copies of each other. Mine, Karthik's, and Luke's. That is a **keiretsu** in the only sense I mean it: affiliated, separate on purpose, still one thing. Ottawa writes. Robbinsdale keeps the house. St. Petersburg thinks. Garage is the warehouse we all use.
-
-When I say "we" later I usually mean the garage-operator project I maintain. Sometimes I mean the three of us, because the hardware lives in our living rooms, not in a colo with a badge reader.
+The right name for that is not a CDN. I do not have a dozen equivalent edges caching the same object. I have three houses that share an origin, a network, and a set of doors, and they are deliberately *not* copies of each other. Mine, Karthik's, and Luke's. That is a **keiretsu** in the only sense I mean it: affiliated, separate on purpose, still one thing. Ottawa writes. Robbinsdale keeps the house. St. Petersburg thinks. Garage is the warehouse the three houses share.
 
 The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-manifests).
 
@@ -74,7 +72,7 @@ Logs follow the same gravity. They are collected everywhere and stored in Ottawa
 
 The thinking is almost boring once you see it. An app in Ottawa speaks S3 to a gateway in Ottawa. That gateway reads and writes local disks when it can, and the cluster copies blocks to Luke's and Karthik's in the background until there are three. If Ottawa's disks are unhappy but the hallway is up, the same gateway can still fetch a copy from another house. That is a different failure than "the city vanished." I have not dramatized every combination. I have run it long enough to keep it.
 
-What was *not* boring was operations. Upstream Garage is a binary and a layout file you edit by hand. Fine for one box. A bad interface for [Flux](https://fluxcd.io/) and for agents that open pull requests. I wanted a bucket to be a merge, a key to be a merge, a node to be a merge. So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator). `GarageCluster`, `GarageBucket`, `GarageKey`. One cluster CR per house, zone named after the city, replication factor 3. We still maintain it because this estate is the reason it exists.
+What was *not* boring was operations. Upstream Garage is a binary and a layout file you edit by hand. Fine for one box. A bad interface for [Flux](https://fluxcd.io/) and for agents that open pull requests. I wanted a bucket to be a merge, a key to be a merge, a node to be a merge. So I wrote [garage-operator](https://github.com/rajsinghtech/garage-operator). `GarageCluster`, `GarageBucket`, `GarageKey`. One cluster CR per house, zone named after the city, replication factor 3. I still maintain it because this estate is the reason it exists.
 
 After that, Garage is the most trivial service in the keiretsu. It uses the same hallway as the model and the metrics. Apps already speak S3. Git already holds the CR. Flux already applies it. There is no extra VPN, no AWS account, no special network just for objects. The operator is the only new piece, and the point of the operator was to make the rest look like everything else.
 
