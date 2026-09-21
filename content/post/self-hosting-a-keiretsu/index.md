@@ -36,6 +36,8 @@ The wiring lives in [the manifests](https://github.com/keiretsu-labs/kubernetes-
 
 A site is a failure domain you chose. A footprint is what is actually in the room: CPU, disk, GPU, or “please do not wake the house.” Placement is a file in git that says this workload runs on that site. No file, it does not run there. I have not built a runtime that picks a site for an agent. “Scheduling control plane” here means the placement rule plus the network that makes the placement reachable.
 
+The cool part is the inverse. Because the app is defined once and the site is just a pointer, **most of the infrastructure can walk**. Move the pointer from Karthik’s tree to Luke’s, merge, and Flux stands it up on the other side of the hallway. Same warehouse, same network, same doors. You are not rebuilding a snowflake. Work that *is* the footprint stays put — GPUs stay on GPU machines, cameras stay in the house — but everything else is portable across the keiretsu on purpose. That is the point of treating sites as a domain instead of three pets.
+
 **Writer site.** Git, login, dashboards, agent workspaces. The place you change the system. Needs ordinary compute and to stay reachable. If it is down, the other sites keep their pods; you just cannot ship. Ours is Karthik’s house in Ottawa.
 
 **House site.** Home automation, media, cameras, a second copy of family files. Different hardware, different risk. You do not put coding agents here. Ours is Luke’s house in Robbinsdale.
