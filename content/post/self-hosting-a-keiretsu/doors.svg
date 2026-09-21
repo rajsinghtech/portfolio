@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300">
+  <style>
+    .card { fill: #222; stroke: #5dba5d; stroke-width: 1.5; }
+    .hi { fill: #1e3a24; stroke: #5dba5d; stroke-width: 1.8; }
+    .t { fill: #e8e8e8; font-family: ui-sans-serif, Helvetica, Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+    .s { fill: #b8b8b8; font-family: ui-sans-serif, Helvetica, Arial, sans-serif; font-size: 12px; text-anchor: middle; }
+    .line { stroke: #c8c8c8; stroke-width: 1.4; fill: none; marker-end: url(#a); }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#c8c8c8"/>
+    </marker>
+  </defs>
+  <rect class="card" x="24" y="24" width="200" height="72" rx="12"/>
+  <text class="t" x="124" y="54">internet</text>
+  <text class="s" x="124" y="74">anyone</text>
+  <rect class="card" x="24" y="114" width="200" height="72" rx="12"/>
+  <text class="t" x="124" y="144">LAN</text>
+  <text class="s" x="124" y="164">the house</text>
+  <rect class="hi" x="24" y="204" width="200" height="72" rx="12"/>
+  <text class="t" x="124" y="234">Tailscale</text>
+  <text class="s" x="124" y="254">identity</text>
+
+  <line class="line" x1="224" y1="60" x2="360" y2="60"/>
+  <line class="line" x1="224" y1="150" x2="360" y2="150"/>
+  <line class="line" x1="224" y1="240" x2="360" y2="240"/>
+
+  <rect class="card" x="360" y="24" width="220" height="72" rx="12"/>
+  <text class="t" x="470" y="66">public sites</text>
+  <rect class="card" x="360" y="114" width="220" height="72" rx="12"/>
+  <text class="t" x="470" y="156">more services</text>
+  <rect class="hi" x="360" y="204" width="220" height="72" rx="12"/>
+  <text class="t" x="470" y="236">kubectl</text>
+  <text class="s" x="470" y="256">inference API</text>
+
+  <line class="line" x1="580" y1="150" x2="700" y2="150"/>
+  <rect class="hi" x="700" y="106" width="236" height="88" rx="12"/>
+  <text class="t" x="818" y="144">the services</text>
+  <text class="s" x="818" y="166">git, grafana, inference</text>
+</svg>

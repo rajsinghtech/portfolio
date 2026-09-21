@@ -1,73 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 420" width="1080" height="420">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 480" width="1000" height="480">
   <style>
     .card { fill: #222; stroke: #5dba5d; stroke-width: 1.5; }
-    .box { fill: #2a2a2a; stroke: #5dba5d; stroke-width: 1.5; }
+    .box { fill: #2a2a2a; stroke: #5dba5d; stroke-width: 1.4; }
     .hi { fill: #1e3a24; stroke: #5dba5d; stroke-width: 1.8; }
     .t { fill: #e8e8e8; font-family: ui-sans-serif, Helvetica, Arial, sans-serif; font-size: 14px; text-anchor: middle; }
-    .ts { fill: #e8e8e8; font-family: ui-sans-serif, Helvetica, Arial, sans-serif; font-size: 13px; text-anchor: middle; }
-    .label { fill: #b8b8b8; font-family: ui-sans-serif, Helvetica, Arial, sans-serif; font-size: 11px; text-anchor: middle; }
-    .line { stroke: #c8c8c8; stroke-width: 1.4; fill: none; marker-end: url(#arr); }
-    .mesh { stroke: #5dba5d; stroke-width: 1.6; fill: none; stroke-dasharray: 5 4; }
+    .s { fill: #b8b8b8; font-family: ui-sans-serif, Helvetica, Arial, sans-serif; font-size: 12px; text-anchor: middle; }
+    .line { stroke: #c8c8c8; stroke-width: 1.4; fill: none; marker-end: url(#a); }
+    .mesh { stroke: #5dba5d; stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
   </style>
   <defs>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M 0 0 L 10 5 L 0 10 z" fill="#c8c8c8"/>
     </marker>
   </defs>
 
-  <rect class="hi" x="340" y="8" width="400" height="36" rx="10"/>
-  <text class="t" x="540" y="31">git  ·  a merge is the layout</text>
+  <rect class="hi" x="300" y="12" width="400" height="40" rx="10"/>
+  <text class="t" x="500" y="38">git  ·  GarageCluster  ·  Bucket  ·  Key</text>
+  <line class="line" x1="500" y1="52" x2="500" y2="68"/>
+  <rect class="box" x="360" y="68" width="280" height="36" rx="10"/>
+  <text class="t" x="500" y="91">garage-operator</text>
 
-  <line class="line" x1="540" y1="44" x2="540" y2="62"/>
-  <rect class="box" x="400" y="62" width="280" height="32" rx="10"/>
-  <text class="t" x="540" y="83">garage-operator</text>
+  <line class="line" x1="500" y1="104" x2="166" y2="140"/>
+  <line class="line" x1="500" y1="104" x2="500" y2="140"/>
+  <line class="line" x1="500" y1="104" x2="834" y2="140"/>
 
-  <line class="line" x1="540" y1="94" x2="180" y2="128"/>
-  <line class="line" x1="540" y1="94" x2="540" y2="128"/>
-  <line class="line" x1="540" y1="94" x2="900" y2="128"/>
+  <rect class="card" x="24" y="140" width="284" height="220" rx="14"/>
+  <text class="t" x="166" y="166">zone</text>
+  <rect class="hi" x="48" y="180" width="236" height="40" rx="10"/>
+  <text class="t" x="166" y="206">S3 gateway</text>
+  <text class="s" x="166" y="236">no blocks, knows the layout</text>
+  <rect class="box" x="48" y="256" width="236" height="80" rx="10"/>
+  <text class="t" x="166" y="290">storage node</text>
+  <text class="s" x="166" y="312">blocks on local disk</text>
 
-  <!-- Ottawa -->
-  <rect class="card" x="40" y="128" width="280" height="210" rx="14"/>
-  <text class="t" x="180" y="152">Kartik</text>
-  <rect class="box" x="70" y="164" width="220" height="36" rx="10"/>
-  <text class="ts" x="180" y="187">apps</text>
-  <text class="label" x="180" y="214">S3</text>
-  <line class="line" x1="180" y1="200" x2="180" y2="226"/>
-  <rect class="hi" x="70" y="226" width="220" height="36" rx="10"/>
-  <text class="ts" x="180" y="249">local gateway</text>
-  <line class="line" x1="180" y1="262" x2="180" y2="286"/>
-  <rect class="box" x="70" y="286" width="220" height="36" rx="10"/>
-  <text class="ts" x="180" y="309">disks</text>
+  <rect class="card" x="358" y="140" width="284" height="220" rx="14"/>
+  <text class="t" x="500" y="166">zone</text>
+  <rect class="hi" x="382" y="180" width="236" height="40" rx="10"/>
+  <text class="t" x="500" y="206">S3 gateway</text>
+  <text class="s" x="500" y="236">apps always hit this</text>
+  <rect class="box" x="382" y="256" width="236" height="80" rx="10"/>
+  <text class="t" x="500" y="290">storage node</text>
+  <text class="s" x="500" y="312">blocks on local disk</text>
 
-  <!-- Luke -->
-  <rect class="card" x="400" y="128" width="280" height="210" rx="14"/>
-  <text class="t" x="540" y="152">Luke</text>
-  <rect class="box" x="430" y="164" width="220" height="36" rx="10"/>
-  <text class="ts" x="540" y="187">apps</text>
-  <text class="label" x="540" y="214">S3</text>
-  <line class="line" x1="540" y1="200" x2="540" y2="226"/>
-  <rect class="hi" x="430" y="226" width="220" height="36" rx="10"/>
-  <text class="ts" x="540" y="249">local gateway</text>
-  <line class="line" x1="540" y1="262" x2="540" y2="286"/>
-  <rect class="box" x="430" y="286" width="220" height="36" rx="10"/>
-  <text class="ts" x="540" y="309">disks</text>
+  <rect class="card" x="692" y="140" width="284" height="220" rx="14"/>
+  <text class="t" x="834" y="166">zone</text>
+  <rect class="hi" x="716" y="180" width="236" height="40" rx="10"/>
+  <text class="t" x="834" y="206">S3 gateway</text>
+  <text class="s" x="834" y="236">same API, this site</text>
+  <rect class="box" x="716" y="256" width="236" height="80" rx="10"/>
+  <text class="t" x="834" y="290">storage node</text>
+  <text class="s" x="834" y="312">blocks on local disk</text>
 
-  <!-- Kartik -->
-  <rect class="card" x="760" y="128" width="280" height="210" rx="14"/>
-  <text class="t" x="900" y="152">Raj</text>
-  <rect class="box" x="790" y="164" width="220" height="36" rx="10"/>
-  <text class="ts" x="900" y="187">apps</text>
-  <text class="label" x="900" y="214">S3</text>
-  <line class="line" x1="900" y1="200" x2="900" y2="226"/>
-  <rect class="hi" x="790" y="226" width="220" height="36" rx="10"/>
-  <text class="ts" x="900" y="249">local gateway</text>
-  <line class="line" x1="900" y1="262" x2="900" y2="286"/>
-  <rect class="box" x="790" y="286" width="220" height="36" rx="10"/>
-  <text class="ts" x="900" y="309">disks</text>
-
-  <line class="mesh" x1="290" y1="244" x2="430" y2="244"/>
-  <line class="mesh" x1="650" y1="244" x2="790" y2="244"/>
-  <rect class="hi" x="340" y="368" width="400" height="36" rx="10"/>
-  <text class="t" x="540" y="391">three copies  ·  same hallway as the model</text>
+  <line class="mesh" x1="284" y1="296" x2="382" y2="296"/>
+  <line class="mesh" x1="618" y1="296" x2="716" y2="296"/>
+  <rect class="hi" x="300" y="384" width="400" height="72" rx="12"/>
+  <text class="t" x="500" y="414">replication factor 3</text>
+  <text class="s" x="500" y="436">CRDT metadata  ·  fetch from any zone</text>
 </svg>

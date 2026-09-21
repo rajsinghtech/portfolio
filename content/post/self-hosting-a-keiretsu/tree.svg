@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" width="720" height="340">
+  <style>
+    .t { fill: #e8e8e8; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; }
+    .dim { fill: #8a8a8a; }
+    .hi { fill: #5dba5d; }
+    .box { fill: #222; stroke: #5dba5d; stroke-width: 1.4; }
+  </style>
+  <rect class="box" x="16" y="16" width="688" height="308" rx="12"/>
+  <text class="t" x="40" y="52">kubernetes/apps/</text>
+  <text class="t dim" x="56" y="84">base/                 # defined once</text>
+  <text class="t" x="72" y="112">git/</text>
+  <text class="t" x="72" y="136">inference/</text>
+  <text class="t" x="72" y="160">home-assistant/</text>
+  <text class="t" x="72" y="184">grafana/</text>
+  <text class="t dim" x="56" y="220">ottawa/               # pointer files</text>
+  <text class="t dim" x="56" y="248">robbinsdale/</text>
+  <text class="t dim" x="56" y="276">stpetersburg/</text>
+  <text class="t hi" x="280" y="220">git.yaml</text>
+  <text class="t hi" x="280" y="248">home-assistant.yaml</text>
+  <text class="t hi" x="280" y="276">inference.yaml</text>
+</svg>
